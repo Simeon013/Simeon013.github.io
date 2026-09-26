@@ -1,0 +1,11 @@
+# Sans ça, la conversion des fins de ligne au checkout peut corrompre
+# silencieusement les images et polices.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

@@ -1,0 +1,50 @@
+---
+import '../styles/global.css';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { locales, useTranslations, type Locale } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{t('meta.title')}</title>
+    <meta name="description" content={t('meta.description')} />
+    <meta name="theme-color" content="#000000" />
+    {locales.map((l) => <link rel="alternate" hreflang={l} href={getRelativeLocaleUrl(l, '')} />)}
+    <meta property="og:title" content={t('meta.title')} />
+    <meta property="og:description" content={t('meta.description')} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-icon-180x180.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Mesure d'audience reprise de l'ancien site. -->
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-8PFWXVCYLT"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      gtag('config', 'G-8PFWXVCYLT');
+    </script>
+  </head>
+  <body>
+    <slot />
+    <div class="screen screen--scan" aria-hidden="true"></div>
+    <div class="screen screen--tear" data-tear aria-hidden="true"></div>
+    <script>
+      import { mountEffects } from '../scripts/effects';
+      mountEffects();
+    </script>
+  </body>
+</html>

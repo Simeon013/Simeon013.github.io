@@ -1,0 +1,809 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from './Nav.astro';
+import Globe from './Globe.astro';
+import ProjectCard from './ProjectCard.astro';
+import IdCard from './IdCard.astro';
+import { contact, journey, lab, projects, skills } from '../data/projects';
+import { useTranslations, type Locale } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const year = new Date().getFullYear();
+
+// Fragments de « données » qui flottent autour du globe : le signal qui émet.
+const fragments = [
+  { text: '200 OK', x: -4, y: 14 },
+  { text: 'flutter build apk', x: 68, y: 6 },
+  { text: 'php artisan serve', x: -10, y: 78 },
+  { text: 'ping cotonou', x: 74, y: 88 },
+  { text: '0x5D', x: 90, y: 46 },
+];
+
+const ticker = ['Laravel', 'Flutter', 'Filament', 'Next.js', 'FastAPI', 'Dart', 'PHP', 'Tailwind CSS', 'MySQL', 'Figma', 'Cotonou', '</>'];
+
+const services = [
+  { title: t('services.web'), text: t('services.webText'), icon: 'web' },
+  { title: t('services.mobile'), text: t('services.mobileText'), icon: 'mobile' },
+  { title: t('services.tools'), text: t('services.toolsText'), icon: 'tools' },
+  { title: t('services.care'), text: t('services.careText'), icon: 'care' },
+];
+---
+
+<Base locale={locale}>
+  <Nav locale={locale} />
+
+  <main>
+    <section class="hero wrap">
+      <div class="hero__text">
+        <p class="hero__status"><span class="hero__dot" aria-hidden="true"></span>{t('hero.available')}</p>
+        <p class="hero__hello">{t('hero.hello')}</p>
+        <h1 class="hero__name glitchable" data-text="Siméon Daouda">Siméon Daouda</h1>
+        <p class="hero__role" data-glitch-title data-after={t('hero.after')}>
+          <span class="sr-only">{t('hero.after')}</span>
+          <span class="glitchable" data-glitch-text data-text={t('hero.before')} aria-hidden="true">{t('hero.before')}</span>
+        </p>
+        <p class="hero__intro">{t('hero.intro')}</p>
+        <div class="hero__ctas">
+          <a class="button button--solid" href="#work">{t('hero.ctaWork')}</a>
+          <a class="button" href={contact.cv} download>{t('hero.ctaCv')}</a>
+        </div>
+        <ul class="hero__socials">
+          <li><a href={contact.github} target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href={contact.linkedin} target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href={contact.whatsapp} target="_blank" rel="noopener">WhatsApp</a></li>
+        </ul>
+      </div>
+      <div class="hero__visual">
+        <div class="hero__globe">
+          <Globe />
+          <ul class="hero__frags" aria-hidden="true">
+            {fragments.map((f, i) => <li style={`--x:${f.x}%;--y:${f.y}%;--d:${i * 0.7}s`}>{f.text}</li>)}
+          </ul>
+        </div>
+        <p class="hero__coords">{t('hero.location')} — {t('hero.coords')}</p>
+      </div>
+    </section>
+
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker__track">
+        {[...ticker, ...ticker].map((word) => <span>{word}</span>)}
+      </div>
+    </div>
+
+    <section id="about" class="section wrap about" aria-labelledby="about-title">
+      <div class="about__story">
+        <h2 id="about-title" class="section__title glitchable" data-scramble>{t('about.title')}</h2>
+        <p data-reveal>{t('about.p1')}</p>
+        <p data-reveal>{t('about.p2')}</p>
+        <p data-reveal>{t('about.p3')}</p>
+        <p class="about__degree" data-reveal>{t('about.degreeLine')}</p>
+      </div>
+      <aside class="about__side" data-reveal>
+        <IdCard locale={locale} />
+        <h3 class="about__label">{t('about.skills')}</h3>
+        <dl class="about__skills">
+          {
+            skills.map((s) => (
+              <div>
+                <dt>{s.group[locale]}</dt>
+                <dd>{s.items.join(' · ')}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </aside>
+    </section>
+
+    <section id="work" class="section wrap" aria-labelledby="work-title">
+      <div class="section__head">
+        <h2 id="work-title" class="section__title glitchable" data-scramble>{t('work.title')}</h2>
+        <p class="section__intro">{t('work.intro')}</p>
+      </div>
+      <div class="work__grid">
+        {projects.map((project) => <ProjectCard project={project} locale={locale} />)}
+      </div>
+
+      <div class="lab">
+        <div class="section__head section__head--small">
+          <h3 class="lab__title glitchable" data-scramble>{t('work.lab')}</h3>
+          <p class="section__intro">{t('work.labIntro')}</p>
+        </div>
+        <ul class="lab__list">
+          {
+            lab.map((item) => (
+              <li class="lab__item" data-reveal>
+                <a href={item.url} target="_blank" rel="noopener">
+                  <span class="lab__name">{item.name}</span>
+                  <span class="lab__status">{item.status[locale]}</span>
+                  <span class="lab__summary">{item.summary[locale]}</span>
+                  <span class="lab__stack">{item.stack}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section id="services" class="section wrap" aria-labelledby="services-title">
+      <div class="section__head">
+        <h2 id="services-title" class="section__title glitchable" data-scramble>{t('services.title')}</h2>
+      </div>
+      <ul class="services">
+        {
+          services.map((s) => (
+            <li class="service" data-reveal>
+              <svg class="service__icon" viewBox="0 0 48 48" fill="none" aria-hidden="true" pathLength="1">
+                {s.icon === 'web' && (
+                  <>
+                    <rect x="4" y="9" width="40" height="30" rx="2" />
+                    <path d="M4 16h40M9 12.5h2M13 12.5h2M10 23h16M10 28h10M30 22h8v10h-8z" />
+                  </>
+                )}
+                {s.icon === 'mobile' && (
+                  <>
+                    <rect x="14" y="4" width="20" height="40" rx="4" />
+                    <path d="M21 9h6M19 17h10M19 22h10M19 27h6M20 38h8" />
+                  </>
+                )}
+                {s.icon === 'tools' && (
+                  <>
+                    <rect x="5" y="6" width="16" height="16" rx="1" />
+                    <rect x="27" y="6" width="16" height="16" rx="1" />
+                    <rect x="5" y="26" width="16" height="16" rx="1" />
+                    <path d="M35 28v12M29 34h12" />
+                  </>
+                )}
+                {s.icon === 'care' && (
+                  <>
+                    <circle cx="24" cy="24" r="17" />
+                    <path d="M24 13v11l7 5M24 4v4M24 40v4M4 24h4M40 24h4" />
+                  </>
+                )}
+              </svg>
+              <h3 class="service__title">{s.title}</h3>
+              <p class="service__text">{s.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="journey" class="section wrap" aria-labelledby="journey-title">
+      <div class="section__head">
+        <h2 id="journey-title" class="section__title glitchable" data-scramble>{t('journey.title')}</h2>
+      </div>
+      <ol class="journey">
+        {
+          journey.map((step) => (
+            <li class="journey__step" data-reveal>
+              <p class="journey__period">{step.period[locale]}</p>
+              <div class="journey__body">
+                <h3 class="journey__title">{step.title[locale]}</h3>
+                <p class="journey__place">{step.place}</p>
+                {step.detail && <p class="journey__detail">{step.detail[locale]}</p>}
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section id="contact" class="contact" aria-labelledby="contact-title">
+      <div class="contact__text wrap">
+        <h2 id="contact-title" class="contact__title glitchable" data-scramble>{t('contact.title')}</h2>
+        <p class="contact__lead">{t('contact.text')}</p>
+        <div class="contact__ctas">
+          <a class="button button--solid" href={contact.whatsapp} target="_blank" rel="noopener">{t('contact.whatsapp')}</a>
+          <a class="button" href={`mailto:${contact.email}`}>{t('contact.email')}</a>
+        </div>
+        <p class="contact__direct">
+          <a href={contact.phoneHref}>{contact.phone}</a>
+          <a href={`mailto:${contact.email}`}>{contact.email}</a>
+        </p>
+      </div>
+      <div class="contact__horizon">
+        <Globe mode="horizon" />
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer wrap">
+    <span>&lt;/SD&gt; © {year}</span>
+    <span>{t('footer.signal')}</span>
+  </footer>
+</Base>
+
+<script>
+  import { mountGlitchTitles } from '../scripts/glitch-title';
+  mountGlitchTitles();
+</script>
+
+<style>
+  /* Présentation : texte à gauche, globe en signature à droite. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: center;
+    gap: clamp(32px, 5vw, 72px);
+    min-height: min(820px, calc(100svh - 84px));
+    padding-block: clamp(32px, 6vw, 72px);
+  }
+  .hero__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .hero__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--green);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+  }
+  .hero__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 0 rgba(30, 242, 160, 0.6);
+    animation: ping 2s infinite;
+  }
+  @keyframes ping {
+    70% {
+      box-shadow: 0 0 0 8px rgba(30, 242, 160, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(30, 242, 160, 0);
+    }
+  }
+  .hero__hello {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .hero__name {
+    font-size: clamp(44px, 7vw, 96px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+  .hero__role {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(22px, 2.6vw, 34px);
+    line-height: 1.15;
+    color: var(--green);
+    min-height: 1.15em;
+  }
+  .hero__intro {
+    max-width: 52ch;
+    font-weight: 300;
+    font-size: clamp(14px, 1.15vw, 16px);
+    margin-top: 4px;
+  }
+  .hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .hero__socials {
+    display: flex;
+    gap: 22px;
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    font-size: 13px;
+  }
+  .hero__socials a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .hero__socials a:hover {
+    color: var(--green);
+  }
+  .hero__visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .hero__globe {
+    width: min(100%, 460px);
+    aspect-ratio: 1;
+  }
+  .hero__coords {
+    font-size: 12px;
+    color: var(--faint);
+  }
+
+  /* Sections communes */
+  .section {
+    padding-block: clamp(72px, 10vw, 128px);
+    border-top: 1px solid var(--line);
+  }
+  .section__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 32px;
+    margin-bottom: clamp(32px, 4vw, 56px);
+  }
+  .section__head--small {
+    margin-bottom: 20px;
+  }
+  .section__title {
+    font-size: clamp(30px, 3.6vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  .section__intro {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 48ch;
+  }
+
+  /* À propos */
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(40px, 6vw, 96px);
+  }
+  .about__story {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    font-size: clamp(15px, 1.2vw, 17px);
+    line-height: 1.8;
+  }
+  .about__story .section__title {
+    margin-bottom: 12px;
+  }
+  .about__side {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 8px;
+  }
+  .about__label {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--green);
+  }
+  .about__label:not(:first-child) {
+    margin-top: 20px;
+  }
+  .about__facts,
+  .about__skills {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .about__facts div,
+  .about__skills div {
+    display: grid;
+    grid-template-columns: 9.5em minmax(0, 1fr);
+    gap: 12px;
+    padding-block: 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .about__facts dt,
+  .about__skills dt {
+    color: var(--faint);
+  }
+  .about__facts dd,
+  .about__skills dd {
+    margin: 0;
+    color: var(--white);
+  }
+
+  /* Projets */
+  .work__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(48px, 5vw, 72px) clamp(24px, 3.5vw, 48px);
+  }
+  .lab {
+    margin-top: clamp(64px, 8vw, 104px);
+  }
+  .lab__title {
+    font-size: clamp(20px, 2vw, 24px);
+  }
+  .lab__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .lab__item a {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, 5fr) minmax(0, 1.6fr);
+    gap: 16px;
+    align-items: baseline;
+    padding: 16px 4px;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    color: var(--text);
+    font-size: 13px;
+    transition: background-color 0.15s;
+  }
+  .lab__item a:hover {
+    background: var(--surface);
+  }
+  .lab__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--white);
+  }
+  .lab__item a:hover .lab__name {
+    color: var(--green);
+  }
+  .lab__status {
+    font-size: 11px;
+    color: var(--violet-soft);
+  }
+  .lab__stack {
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* Services */
+  .services {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .service {
+    background: var(--black);
+    padding: clamp(24px, 2.5vw, 32px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .service__icon {
+    width: 40px;
+    height: 40px;
+    stroke: var(--green);
+    stroke-width: 1.4;
+    margin-bottom: 8px;
+  }
+  .service__title {
+    font-size: 19px;
+    line-height: 1.2;
+  }
+  .service__text {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* Parcours */
+  .journey {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+  .journey__step {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+    gap: 24px;
+    padding-block: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .journey__step:first-child {
+    border-top: 1px solid var(--line);
+  }
+  .journey__period {
+    font-size: 13px;
+    color: var(--green);
+  }
+  .journey__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .journey__title {
+    font-size: 20px;
+  }
+  .journey__place {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .journey__detail {
+    font-size: 14px;
+    max-width: 60ch;
+    margin-top: 6px;
+  }
+
+  /* Contact : le signal se rétablit, l'horizon du globe ferme la page. */
+  .contact {
+    border-top: 1px solid var(--line);
+    padding-top: clamp(72px, 10vw, 128px);
+    text-align: center;
+  }
+  .contact__text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .contact__title {
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+  }
+  .contact__lead {
+    color: var(--muted);
+  }
+  .contact__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .contact__direct {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 24px;
+    font-size: 13px;
+  }
+  .contact__direct a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--muted);
+  }
+  .contact__horizon {
+    height: clamp(200px, 28vw, 380px);
+    margin-top: 16px;
+  }
+
+  /* ---------- Vie et glitch ---------- */
+
+  /* Le nom décroche de temps en temps, sans script. */
+  .hero__name::before,
+  .hero__name::after {
+    animation: name-flicker 7s steps(1) infinite;
+  }
+  .hero__name::before {
+    color: var(--violet);
+    clip-path: inset(12% 0 60% 0);
+    transform: translateX(-0.05em);
+  }
+  .hero__name::after {
+    color: var(--green);
+    clip-path: inset(58% 0 12% 0);
+    transform: translateX(0.06em);
+    animation-delay: 0.08s;
+  }
+  @keyframes name-flicker {
+    0%,
+    91%,
+    94%,
+    100% {
+      opacity: 0;
+    }
+    92%,
+    95%,
+    96% {
+      opacity: 1;
+    }
+  }
+
+  .hero__globe {
+    position: relative;
+  }
+  .hero__frags {
+    position: absolute;
+    inset: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+  }
+  .hero__frags li {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 3px 8px;
+    white-space: nowrap;
+    animation:
+      frag-float 6s ease-in-out var(--d) infinite,
+      frag-glitch 4.5s steps(1) var(--d) infinite;
+  }
+  .hero__frags li:nth-child(2n) {
+    color: var(--green);
+    border-color: rgba(30, 242, 160, 0.35);
+  }
+  .hero__frags li:nth-child(3) {
+    color: var(--violet-soft);
+  }
+  @keyframes frag-float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -10px;
+    }
+  }
+  @keyframes frag-glitch {
+    0%,
+    86%,
+    100% {
+      transform: none;
+      opacity: 1;
+    }
+    88% {
+      transform: translateX(8px) skewX(-12deg);
+      opacity: 0.4;
+    }
+    91% {
+      transform: translateX(-5px);
+      opacity: 1;
+    }
+  }
+
+  .about__degree {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .about__side {
+    gap: 18px;
+  }
+
+  /* Les icônes de services se dessinent à leur apparition. */
+  .service__icon :global(*) {
+    stroke-dasharray: 160;
+    stroke-dashoffset: 160;
+  }
+  .service.is-in .service__icon :global(*) {
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1.6s ease-out 0.3s;
+  }
+  .service:hover .service__icon {
+    animation: icon-jitter 0.3s steps(2) infinite;
+  }
+  @keyframes icon-jitter {
+    0% {
+      transform: translate(-1px, 0);
+      filter: drop-shadow(2px 0 var(--violet));
+    }
+    100% {
+      transform: translate(1px, 0);
+      filter: drop-shadow(-2px 0 var(--violet));
+    }
+  }
+
+  /* Un signal parcourt le fil du parcours. */
+  .journey::before {
+    content: '';
+    position: absolute;
+    left: calc(25% + 6px);
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--line);
+  }
+  .journey::after {
+    content: '';
+    position: absolute;
+    left: calc(25% + 5px);
+    top: 0;
+    width: 3px;
+    height: 60px;
+    background: linear-gradient(transparent, var(--green), transparent);
+    animation: signal 4s linear infinite;
+  }
+  @keyframes signal {
+    from {
+      top: 0;
+    }
+    to {
+      top: calc(100% - 60px);
+    }
+  }
+  .journey__period {
+    position: relative;
+  }
+  .journey__period::after {
+    content: '';
+    position: absolute;
+    right: -15px;
+    top: 7px;
+    width: 7px;
+    height: 7px;
+    background: var(--black);
+    border: 1px solid var(--green);
+    transform: rotate(45deg);
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding-block: 20px 28px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--faint);
+  }
+
+  @media (max-width: 1000px) {
+    .services {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 820px) {
+    .hero,
+    .about,
+    .work__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .hero {
+      min-height: 0;
+    }
+    .hero__visual {
+      order: -1;
+    }
+    .hero__globe {
+      width: min(72%, 320px);
+    }
+    .lab__item a {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4px 16px;
+    }
+    .lab__summary {
+      grid-column: 1 / -1;
+    }
+    .lab__stack {
+      grid-column: 1 / -1;
+      text-align: left;
+    }
+    .journey__step {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 6px;
+    }
+    .journey::before,
+    .journey::after,
+    .journey__period::after {
+      display: none;
+    }
+    .hero__frags li {
+      font-size: 10px;
+    }
+  }
+  @media (max-width: 520px) {
+    .services {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

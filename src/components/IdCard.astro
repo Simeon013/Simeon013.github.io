@@ -1,0 +1,251 @@
+---
+import { useTranslations, type Locale } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<div class="idcard-wrap" data-tilt>
+  <figure class="idcard" aria-label={t('card.alt')}>
+    <div class="idcard__head">
+      <span>{t('card.kind')}</span>
+      <span class="idcard__id">SD-2022-BJ</span>
+    </div>
+    <div class="idcard__body">
+      <!-- Silhouette en attendant une vraie photo : trois calques décalés pour le glitch. -->
+      <div class="idcard__avatar" aria-hidden="true">
+        <svg viewBox="0 0 120 140" class="avatar avatar--violet"><path d="M60 18a26 26 0 1 1 0 52a26 26 0 0 1 0-52zM14 140c2-34 22-56 46-56s44 22 46 56z" /></svg>
+        <svg viewBox="0 0 120 140" class="avatar avatar--green"><path d="M60 18a26 26 0 1 1 0 52a26 26 0 0 1 0-52zM14 140c2-34 22-56 46-56s44 22 46 56z" /></svg>
+        <svg viewBox="0 0 120 140" class="avatar avatar--main"><path d="M60 18a26 26 0 1 1 0 52a26 26 0 0 1 0-52zM14 140c2-34 22-56 46-56s44 22 46 56z" /></svg>
+        <span class="idcard__scan"></span>
+      </div>
+      <dl class="idcard__fields">
+        <div><dt>{t('card.name')}</dt><dd>Siméon Daouda</dd></div>
+        <div><dt>{t('card.role')}</dt><dd class="is-green">{t('hero.after')}</dd></div>
+        <div><dt>{t('card.base')}</dt><dd>{t('hero.location')}</dd></div>
+        <div><dt>{t('card.since')}</dt><dd>2022</dd></div>
+        <div><dt>{t('card.weapons')}</dt><dd>Laravel · Flutter</dd></div>
+      </dl>
+    </div>
+    <div class="idcard__foot" aria-hidden="true">
+      <span class="idcard__barcode"></span>
+      <span class="idcard__status"><i></i>{t('card.status')}</span>
+    </div>
+  </figure>
+</div>
+
+<script>
+  // La carte s'incline vers la souris ; rien sur tactile ni si le mouvement est réduit.
+  const wrap = document.querySelector<HTMLElement>('[data-tilt]');
+  const fine = window.matchMedia('(pointer: fine)').matches;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (wrap && fine && !reduce) {
+    const card = wrap.firstElementChild as HTMLElement;
+    wrap.addEventListener('pointermove', (e) => {
+      const r = wrap.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `rotateY(${x * 14}deg) rotateX(${-y * 12}deg)`;
+    });
+    wrap.addEventListener('pointerleave', () => (card.style.transform = ''));
+  }
+</script>
+
+<style>
+  .idcard-wrap {
+    perspective: 1000px;
+  }
+  .idcard {
+    margin: 0;
+    border: 1px solid var(--green);
+    background:
+      linear-gradient(135deg, rgba(30, 242, 160, 0.06), transparent 40%),
+      var(--surface);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: transform 0.2s ease-out;
+    transform-style: preserve-3d;
+    position: relative;
+    overflow: hidden;
+  }
+  .idcard::after {
+    /* Reflet qui balaie la carte en continu. */
+    content: '';
+    position: absolute;
+    inset: -50% auto -50% -60%;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(30, 242, 160, 0.08), transparent);
+    transform: rotate(18deg);
+    animation: shine 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes shine {
+    0%,
+    60% {
+      left: -60%;
+    }
+    100% {
+      left: 130%;
+    }
+  }
+  .idcard__head,
+  .idcard__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--faint);
+  }
+  .idcard__id {
+    color: var(--violet-soft);
+  }
+  .idcard__body {
+    display: grid;
+    grid-template-columns: 34% minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+  .idcard__avatar {
+    position: relative;
+    aspect-ratio: 6 / 7;
+    border: 1px solid var(--line);
+    background: #020a06;
+    overflow: hidden;
+  }
+  .avatar {
+    position: absolute;
+    inset: 12% 8% 0;
+    width: 84%;
+    height: 88%;
+  }
+  .avatar--main {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 1.5;
+  }
+  .avatar--green,
+  .avatar--violet {
+    fill: none;
+    stroke-width: 1.5;
+    opacity: 0.8;
+  }
+  .avatar--green {
+    stroke: var(--green);
+    animation: split-g 3.2s steps(1) infinite;
+  }
+  .avatar--violet {
+    stroke: var(--violet);
+    animation: split-v 3.2s steps(1) infinite;
+  }
+  @keyframes split-g {
+    0%,
+    88%,
+    100% {
+      transform: none;
+      clip-path: inset(0);
+    }
+    90% {
+      transform: translateX(5px);
+      clip-path: inset(20% 0 55% 0);
+    }
+    94% {
+      transform: translateX(-3px);
+      clip-path: inset(60% 0 10% 0);
+    }
+  }
+  @keyframes split-v {
+    0%,
+    86%,
+    100% {
+      transform: none;
+      clip-path: inset(0);
+    }
+    88% {
+      transform: translateX(-6px);
+      clip-path: inset(35% 0 40% 0);
+    }
+    93% {
+      transform: translateX(4px);
+      clip-path: inset(5% 0 75% 0);
+    }
+  }
+  .idcard__scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--green);
+    box-shadow: 0 0 12px var(--green);
+    animation: scan 2.6s ease-in-out infinite;
+  }
+  @keyframes scan {
+    0%,
+    100% {
+      top: 6%;
+    }
+    50% {
+      top: 94%;
+    }
+  }
+  .idcard__fields {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .idcard__fields div {
+    display: flex;
+    flex-direction: column;
+  }
+  .idcard__fields dt {
+    font-size: 10px;
+    color: var(--faint);
+  }
+  .idcard__fields dd {
+    margin: 0;
+    font-size: 13px;
+    color: var(--white);
+    line-height: 1.35;
+  }
+  .idcard__fields dd.is-green {
+    color: var(--green);
+  }
+  .idcard__barcode {
+    width: 46%;
+    height: 22px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--muted) 0 2px,
+      transparent 2px 4px,
+      var(--muted) 4px 5px,
+      transparent 5px 8px,
+      var(--muted) 8px 11px,
+      transparent 11px 12px
+    );
+    opacity: 0.6;
+  }
+  .idcard__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--green);
+  }
+  .idcard__status i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 1.2s steps(1) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0.2;
+    }
+  }
+</style>

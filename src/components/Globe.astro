@@ -1,0 +1,23 @@
+---
+interface Props {
+  mode?: 'sphere' | 'horizon';
+  class?: string;
+}
+
+const { mode = 'sphere', class: className } = Astro.props;
+---
+
+<canvas data-globe data-mode={mode} class:list={['globe', className]} aria-hidden="true"></canvas>
+
+<script>
+  import { mountGlobes } from '../scripts/globe';
+  mountGlobes();
+</script>
+
+<style>
+  .globe {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>
