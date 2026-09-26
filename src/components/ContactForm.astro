@@ -1,0 +1,226 @@
+---
+import { contact } from '../data/projects';
+import { useTranslations, type Locale } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<form
+  class="form"
+  action={contact.formEndpoint}
+  method="POST"
+  data-contact-form
+  data-sending={t('form.sending')}
+  data-success={t('form.success')}
+  data-error={t('form.error')}
+>
+  <h3 class="form__title">{t('form.title')}</h3>
+
+  <div class="form__row">
+    <div class="field">
+      <label for="cf-name">{t('form.name')}</label>
+      <input id="cf-name" name="name" type="text" autocomplete="name" required placeholder={t('form.namePlaceholder')} aria-describedby="cf-name-err" data-err={t('form.errName')} />
+      <p class="field__error" id="cf-name-err" aria-live="polite"></p>
+    </div>
+    <div class="field">
+      <label for="cf-email">{t('form.email')}</label>
+      <input id="cf-email" name="email" type="email" autocomplete="email" required placeholder={t('form.emailPlaceholder')} aria-describedby="cf-email-err" data-err={t('form.errEmail')} />
+      <p class="field__error" id="cf-email-err" aria-live="polite"></p>
+    </div>
+  </div>
+  <div class="field">
+    <label for="cf-message">{t('form.message')}</label>
+    <textarea id="cf-message" name="message" rows="5" required placeholder={t('form.messagePlaceholder')} aria-describedby="cf-message-err" data-err={t('form.errMessage')}></textarea>
+    <p class="field__error" id="cf-message-err" aria-live="polite"></p>
+  </div>
+
+  <!-- Champ piège : invisible pour les humains, rempli par les robots. Formspree rejette ces envois. -->
+  <input class="form__trap" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" />
+  <input type="hidden" name="_language" value={locale} />
+
+  <div class="form__foot">
+    <button class="button button--solid form__submit" type="submit">
+      <span class="glitchable" data-submit-label data-text={t('form.submit')}>{t('form.submit')}</span>
+    </button>
+    <p class="form__status" role="status" aria-live="polite" data-status></p>
+  </div>
+</form>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+
+  if (form) {
+    // Le navigateur valide seul si le script ne charge pas ; sinon on affiche nos messages.
+    form.noValidate = true;
+    const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input[required], textarea[required]')];
+    const status = form.querySelector<HTMLElement>('[data-status]')!;
+    const label = form.querySelector<HTMLElement>('[data-submit-label]')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const idleLabel = label.textContent ?? '';
+
+    const errorOf = (f: HTMLInputElement | HTMLTextAreaElement) => document.getElementById(f.getAttribute('aria-describedby') ?? '');
+    const check = (f: HTMLInputElement | HTMLTextAreaElement) => {
+      const ok = f.value.trim() !== '' && f.checkValidity();
+      f.setAttribute('aria-invalid', String(!ok));
+      const el = errorOf(f);
+      if (el) el.textContent = ok ? '' : (f.dataset.err ?? '');
+      return ok;
+    };
+    fields.forEach((f) => f.addEventListener('input', () => f.getAttribute('aria-invalid') === 'true' && check(f)));
+
+    const setLabel = (text: string) => {
+      label.textContent = text;
+      label.dataset.text = text;
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.textContent = '';
+      status.className = 'form__status';
+      const invalid = fields.filter((f) => !check(f));
+      if (invalid.length) {
+        invalid[0].focus();
+        return;
+      }
+
+      button.disabled = true;
+      label.classList.add('is-glitching');
+      setLabel(form.dataset.sending ?? '');
+      try {
+        const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error(String(res.status));
+        form.reset();
+        status.textContent = form.dataset.success ?? '';
+        status.classList.add('is-success');
+      } catch {
+        status.textContent = form.dataset.error ?? '';
+        status.classList.add('is-error');
+      } finally {
+        button.disabled = false;
+        label.classList.remove('is-glitching');
+        setLabel(idleLabel);
+      }
+    });
+  }
+</script>
+
+<style>
+  .form {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    border: 1px solid var(--line);
+    background: rgba(3, 16, 10, 0.85);
+    padding: clamp(20px, 3vw, 32px);
+    position: relative;
+  }
+  .form::before {
+    /* Coin de repère façon viseur, rappel de l'univers écran. */
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 18px;
+    height: 18px;
+    border-top: 2px solid var(--green);
+    border-left: 2px solid var(--green);
+  }
+  .form__title {
+    font-size: 18px;
+  }
+  .form__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .field input,
+  .field textarea {
+    font: 400 15px/1.5 var(--font-body);
+    color: var(--white);
+    background: var(--black);
+    border: 1px solid var(--line);
+    border-radius: 0;
+    padding: 12px 14px;
+    min-height: 48px;
+    transition: border-color 0.15s;
+  }
+  .field textarea {
+    resize: vertical;
+  }
+  .field input::placeholder,
+  .field textarea::placeholder {
+    color: var(--faint);
+  }
+  .field input:hover,
+  .field textarea:hover {
+    border-color: rgba(30, 242, 160, 0.4);
+  }
+  .field input:focus-visible,
+  .field textarea:focus-visible {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: -2px 0 0 var(--violet), 2px 0 0 var(--green);
+  }
+  .field [aria-invalid='true'] {
+    border-color: #ff5c7a;
+  }
+  .field__error {
+    font-size: 12px;
+    color: #ff8fa3;
+    min-height: 0;
+  }
+  .field__error:empty {
+    display: none;
+  }
+  .form__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  .form__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+  }
+  .form__submit {
+    cursor: pointer;
+  }
+  .form__submit:disabled {
+    cursor: progress;
+  }
+  .form__status {
+    font-size: 13px;
+  }
+  .form__status.is-success {
+    color: var(--green);
+  }
+  .form__status.is-error {
+    color: #ff8fa3;
+  }
+  @media (max-width: 640px) {
+    .form__row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

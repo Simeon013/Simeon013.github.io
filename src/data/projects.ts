@@ -194,5 +194,7 @@ export const contact = {
   whatsapp: 'https://wa.me/2290166588821',
   linkedin: 'https://www.linkedin.com/in/simeon013/',
   github: 'https://github.com/Simeon013',
+  // Formulaire Formspree déjà utilisé par l'ancien site : l'identifiant est public par nature.
+  formEndpoint: 'https://formspree.io/f/mqkrvevv',
   cv: '/cv/simeon-daouda-cv.pdf',
 };

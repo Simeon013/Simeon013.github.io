@@ -4,6 +4,7 @@ import Nav from './Nav.astro';
 import Globe from './Globe.astro';
 import ProjectCard from './ProjectCard.astro';
 import IdCard from './IdCard.astro';
+import ContactForm from './ContactForm.astro';
 import { contact, journey, lab, projects, skills } from '../data/projects';
 import { useTranslations, type Locale } from '../i18n/ui';
 
@@ -206,6 +207,9 @@ const services = [
           <a href={contact.phoneHref}>{contact.phone}</a>
           <a href={`mailto:${contact.email}`}>{contact.email}</a>
         </p>
+        <div class="contact__form" data-reveal>
+          <ContactForm locale={locale} />
+        </div>
       </div>
       <div class="contact__horizon">
         <Globe mode="horizon" />
@@ -576,6 +580,10 @@ const services = [
     display: inline-flex;
     align-items: center;
     color: var(--muted);
+  }
+  .contact__form {
+    width: 100%;
+    margin-top: clamp(24px, 4vw, 40px);
   }
   .contact__horizon {
     height: clamp(200px, 28vw, 380px);
