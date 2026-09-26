@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { getRelativeLocaleUrl } from 'astro:i18n';
+import { getAbsoluteLocaleUrl } from 'astro:i18n';
 import { locales, useTranslations, type Locale } from '../i18n/ui';
 
 interface Props {
@@ -19,7 +19,9 @@ const t = useTranslations(locale);
     <title>{t('meta.title')}</title>
     <meta name="description" content={t('meta.description')} />
     <meta name="theme-color" content="#000000" />
-    {locales.map((l) => <link rel="alternate" hreflang={l} href={getRelativeLocaleUrl(l, '')} />)}
+    <link rel="canonical" href={getAbsoluteLocaleUrl(locale, '')} />
+    {locales.map((l) => <link rel="alternate" hreflang={l} href={getAbsoluteLocaleUrl(l, '')} />)}
+    <link rel="alternate" hreflang="x-default" href={getAbsoluteLocaleUrl('fr', '')} />
     <meta property="og:title" content={t('meta.title')} />
     <meta property="og:description" content={t('meta.description')} />
     <meta property="og:type" content="website" />
