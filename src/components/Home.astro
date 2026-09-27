@@ -254,19 +254,31 @@ const services = [
     padding: 6px 12px;
   }
   .hero__dot {
+    position: relative;
     width: 7px;
     height: 7px;
     border-radius: 50%;
     background: var(--green);
-    box-shadow: 0 0 0 0 rgba(30, 242, 160, 0.6);
-    animation: ping 2s infinite;
+  }
+  .hero__dot::after {
+    /* L'onde est un disque qui grandit et s'efface (transform + opacity) :
+       une ombre animée repeignait le badge à chaque image. */
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--green);
+    animation: ping 2s ease-out infinite;
   }
   @keyframes ping {
-    70% {
-      box-shadow: 0 0 0 8px rgba(30, 242, 160, 0);
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
     }
+    70%,
     100% {
-      box-shadow: 0 0 0 0 rgba(30, 242, 160, 0);
+      transform: scale(3.2);
+      opacity: 0;
     }
   }
   .hero__hello {
@@ -721,22 +733,26 @@ const services = [
     width: 1px;
     background: var(--line);
   }
+  .journey {
+    overflow: hidden;
+  }
   .journey::after {
+    /* Calque pleine hauteur, dégradé en tête, glissé en transform plutôt que par « top ». */
     content: '';
     position: absolute;
     left: calc(25% + 5px);
     top: 0;
     width: 3px;
-    height: 60px;
-    background: linear-gradient(transparent, var(--green), transparent);
+    height: 100%;
+    background: linear-gradient(var(--green), transparent 60px);
     animation: signal 4s linear infinite;
   }
   @keyframes signal {
     from {
-      top: 0;
+      transform: translateY(-60px);
     }
     to {
-      top: calc(100% - 60px);
+      transform: translateY(100%);
     }
   }
   .journey__period {

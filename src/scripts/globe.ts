@@ -142,20 +142,37 @@ function mount(canvas: HTMLCanvasElement) {
     }
   };
 
+  // 30 images/s suffisent à une rotation lente et divisent le coût par deux :
+  // à pleine cadence, le globe pesait lourd dans le temps de rendu mesuré sur mobile.
+  let last = 0;
   const loop = (now: number) => {
-    draw(now);
+    if (now - last >= 33) {
+      last = now;
+      draw(now);
+    }
     if (running) raf = requestAnimationFrame(loop);
   };
 
+  let ready = document.readyState === 'complete';
+  let wanted = false;
   const start = () => {
-    if (running || reduceMotion) return;
+    wanted = true;
+    if (running || reduceMotion || !ready) return;
     running = true;
     raf = requestAnimationFrame(loop);
   };
   const stop = () => {
+    wanted = false;
     running = false;
     cancelAnimationFrame(raf);
   };
+  // La rotation attend la fin du chargement : une image fixe s'affiche d'abord.
+  if (!ready) {
+    addEventListener('load', () => {
+      ready = true;
+      if (wanted) start();
+    }, { once: true });
+  }
 
   resize();
   draw(performance.now());

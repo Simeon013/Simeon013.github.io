@@ -6,6 +6,11 @@ export default defineConfig({
   // racine. Avant le renommage, le dépôt « darkfolio » imposait un sous-chemin
   // /darkfolio/ et une fonction pour préfixer chaque lien interne.
   site: 'https://simeon013.github.io',
+  build: {
+    // Le CSS (≈15 Ko) inclus dans la page : sans ça, Lighthouse mesurait
+    // 320 ms d'affichage bloqué par la feuille de style séparée sur mobile.
+    inlineStylesheets: 'always',
+  },
   i18n: {
     locales: ['fr', 'en'],
     defaultLocale: 'fr',

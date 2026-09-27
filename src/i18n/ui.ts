@@ -5,6 +5,7 @@ const fr = {
   'meta.title': 'Siméon Daouda — Développeur web et mobile',
   'meta.description':
     'Siméon Daouda, développeur web et mobile freelance à Cotonou (Bénin). Sites avec back-office, applications Flutter et outils métier.',
+  'meta.ogAlt': 'Siméon Daouda, mercenaire du développement, devant un globe en fil de fer vert',
   'nav.about': 'À propos',
   'nav.work': 'Projets',
   'nav.services': 'Services',
@@ -88,6 +89,7 @@ const en: Record<UiKey, string> = {
   'meta.title': 'Siméon Daouda — Web and mobile developer',
   'meta.description':
     'Siméon Daouda, freelance web and mobile developer in Cotonou, Benin. Websites with back offices, Flutter apps and business tools.',
+  'meta.ogAlt': 'Siméon Daouda, mercenary of development, beside a green wireframe globe',
   'nav.about': 'About',
   'nav.work': 'Work',
   'nav.services': 'Services',

@@ -151,8 +151,9 @@ p {
   z-index: 50;
 }
 .screen--scan {
-  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
-  mix-blend-mode: overlay;
+  /* Pas de mix-blend-mode ici : sur un calque plein écran, il forçait le
+     navigateur à recomposer toute la page à chaque image (rendu saccadé sur mobile). */
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px);
 }
 .screen--scan::after {
   /* Une bande plus claire descend lentement l'écran, comme sur un vieux moniteur. */
@@ -253,7 +254,7 @@ p {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: clamp(16px, 1.6vw, 20px);
-  color: var(--faint);
+  color: var(--muted);
   white-space: nowrap;
 }
 .ticker__track span:nth-child(3n + 1) {

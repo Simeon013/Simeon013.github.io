@@ -285,18 +285,18 @@ const { visual } = project;
     position: absolute;
     left: -10%;
     right: -10%;
-    height: 2px;
-    background: var(--violet);
-    box-shadow: 0 0 10px var(--violet);
+    top: 0;
+    height: 100%;
+    border-top: 2px solid var(--violet);
     animation: beam 1.8s ease-in-out infinite;
   }
   @keyframes beam {
     0%,
     100% {
-      top: 0;
+      transform: translateY(0);
     }
     50% {
-      top: 100%;
+      transform: translateY(100%);
     }
   }
   .mock__row {

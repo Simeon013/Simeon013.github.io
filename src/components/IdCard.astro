@@ -176,21 +176,21 @@ const t = useTranslations(locale);
     }
   }
   .idcard__scan {
+    /* Calque pleine hauteur dont seul le bord haut est visible : on le fait
+       glisser en transform. Animer « top » recalculait la mise en page à chaque image. */
     position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--green);
-    box-shadow: 0 0 12px var(--green);
+    inset: 0;
+    border-top: 2px solid var(--green);
+    filter: drop-shadow(0 0 6px var(--green));
     animation: scan 2.6s ease-in-out infinite;
   }
   @keyframes scan {
     0%,
     100% {
-      top: 6%;
+      transform: translateY(6%);
     }
     50% {
-      top: 94%;
+      transform: translateY(94%);
     }
   }
   .idcard__fields {

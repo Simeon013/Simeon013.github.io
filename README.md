@@ -35,6 +35,7 @@ Avec un domaine personnalisé plus tard : changer `site` dans `astro.config.mjs`
 | Effets glitch (titres, déchirures, apparitions) | `src/scripts/effects.ts` |
 | Titre qui glitche dans la présentation | `src/scripts/glitch-title.ts` |
 | Couleurs, polices, boutons, couche d'écran | `src/styles/global.css` |
+| Vignette de partage (WhatsApp, LinkedIn…) | `python scripts/og-image.py` → `public/og-fr.png`, `public/og-en.png` |
 
 Ajouter une langue : l'ajouter dans `astro.config.mjs` (`i18n.locales`), dans `locales` et le dictionnaire de `src/i18n/ui.ts`, puis créer `src/pages/<langue>/index.astro`.
 
@@ -54,6 +55,17 @@ Chaque section répond à une question du visiteur, dans l'ordre où il se la po
 - **Les expérimentations sont annoncées comme telles** (« en cours », « prototype », « exercice ») : ce sont des projets de test, non déployés.
 - **Polices auto-hébergées** (`@fontsource`) plutôt que Google Fonts : une connexion à un domaine tiers en moins au chargement.
 - **Les captures passent par `astro:assets`.** Les PNG d'origine pesaient 3,8 Mo à eux seuls ; convertis en WebP aux bonnes tailles, ils tombent à quelques dizaines de Ko chacun.
+
+## Performance
+
+Mesurée avec Lighthouse, profil mobile (téléphone milieu de gamme, 4G lente simulée) : 99–100 en performance, 100 en accessibilité, bonnes pratiques et SEO. Avant les corrections ci-dessous : 80, avec 3,4 s avant l'affichage du contenu principal.
+
+Ce qui coûtait, et ne doit pas revenir :
+- **Google Analytics chargé d'emblée** : 172 Ko (64 % de la page) et 0,5 s de JavaScript avant tout affichage. Il est chargé à la première interaction ou au bout de 6 s (`src/layouts/Base.astro`).
+- **Animations sur `top`, `box-shadow` ou avec `mix-blend-mode` plein écran** : elles recalculent la mise en page ou repeignent toute la page à chaque image. N'animer que `transform` et `opacity`.
+- **Feuille de style séparée** : 320 ms d'affichage bloqué. Le CSS est inclus dans la page (`inlineStylesheets` dans `astro.config.mjs`).
+- **Polices non préchargées** : le texte sautait à l'arrivée des polices. Les trois du haut de page sont préchargées.
+- Le globe tourne à 30 images/s et ne démarre qu'après le chargement.
 
 ## Reste à faire
 
