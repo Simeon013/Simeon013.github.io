@@ -3,6 +3,7 @@ import type { Locale } from '../i18n/ui';
 import icibillet from '../assets/projects/icibillet.png';
 import layersTec from '../assets/projects/layers-tec.png';
 import olaCompagny from '../assets/projects/ola-compagny.png';
+import quickeatDashboard from '../assets/case-studies/quickeat/tableau-de-bord.png';
 
 export type Localized = Record<Locale, string>;
 
@@ -19,6 +20,8 @@ export type Project = {
   summary: Localized;
   stack: string[];
   links?: { label: string; url: string }[];
+  /** Slug de l'étude de cas, s'il y en a une (src/data/case-studies.ts). */
+  caseStudy?: string;
   visual: ProjectVisual;
 };
 
@@ -33,7 +36,12 @@ export const projects: Project[] = [
       en: 'QR-code ordering for restaurants: guests scan their table, order and call the waiter from their phone.',
     },
     stack: ['Next.js', 'FastAPI'],
-    visual: { kind: 'mock', mock: 'order' },
+    links: [{ label: 'quickeat.bj', url: 'https://quickeat.bj' }],
+    caseStudy: 'quickeat',
+    visual: {
+      kind: 'image',
+      images: [{ src: quickeatDashboard, alt: { fr: 'Tableau de bord QuickEat du manager', en: 'QuickEat manager dashboard' } }],
+    },
   },
   {
     id: 'icibillet-scan',
@@ -45,6 +53,7 @@ export const projects: Project[] = [
     },
     stack: ['Flutter'],
     links: [{ label: 'icibillet.com', url: 'https://icibillet.com/solutions/icibillet-scan' }],
+    caseStudy: 'icibillet-scan',
     visual: {
       kind: 'image',
       images: [{ src: icibillet, alt: { fr: 'Application ICIBillet Scan', en: 'ICIBillet Scan app' } }],

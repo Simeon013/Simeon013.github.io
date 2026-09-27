@@ -6,22 +6,26 @@ import { locales, useTranslations, type Locale } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
+  /** Chemin de la page courante dans chaque langue, pour que FR/EN mène à la même page. */
+  paths?: Record<Locale, string>;
 }
 
-const { locale } = Astro.props;
+const { locale, paths } = Astro.props;
 const t = useTranslations(locale);
+const home = getRelativeLocaleUrl(locale, '');
+// Liens vers les sections de l'accueil : ils fonctionnent aussi depuis une étude de cas.
 const links = [
-  { href: '#about', label: t('nav.about') },
-  { href: '#work', label: t('nav.work') },
-  { href: '#services', label: t('nav.services') },
-  { href: '#journey', label: t('nav.journey') },
-  { href: '#contact', label: t('nav.contact') },
+  { href: `${home}#about`, label: t('nav.about') },
+  { href: `${home}#work`, label: t('nav.work') },
+  { href: `${home}#services`, label: t('nav.services') },
+  { href: `${home}#journey`, label: t('nav.journey') },
+  { href: `${home}#contact`, label: t('nav.contact') },
 ];
-const langs = locales.map((l) => ({ code: l, href: getRelativeLocaleUrl(l, ''), current: l === locale }));
+const langs = locales.map((l) => ({ code: l, href: getRelativeLocaleUrl(l, paths?.[l] ?? ''), current: l === locale }));
 ---
 
 <header class="nav wrap">
-  <a class="nav__logo" href={getRelativeLocaleUrl(locale, '')} aria-label="Siméon Daouda">
+  <a class="nav__logo" href={home} aria-label="Siméon Daouda">
     <Image src={logo} alt="" width={120} height={120} loading="eager" />
   </a>
   <nav aria-label={t('nav.sections')}>

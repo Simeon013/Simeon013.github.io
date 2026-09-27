@@ -29,6 +29,7 @@ Avec un domaine personnalisé plus tard : changer `site` dans `astro.config.mjs`
 |---|---|
 | Textes de l'interface (fr / en) | `src/i18n/ui.ts` |
 | Projets, expérimentations, compétences, parcours, contact | `src/data/projects.ts` |
+| Études de cas (QuickEat, ICIBillet Scan) | `src/data/case-studies.ts`, captures dans `src/assets/case-studies/` |
 | Captures des projets | `src/assets/projects/` (PNG ou JPG, converties en WebP au build) |
 | CV téléchargeable | `public/cv/simeon-daouda-cv.pdf` |
 | Globe animé | `src/scripts/globe.ts` |
@@ -44,6 +45,8 @@ Ajouter une langue : l'ajouter dans `astro.config.mjs` (`i18n.locales`), dans `l
 Présentation (nom, rôle, accroche, CV) → À propos → Projets (réalisations, puis expérimentations) → Services → Parcours → Contact → footer.
 
 Chaque section répond à une question du visiteur, dans l'ordre où il se la pose : qui es-tu, qu'as-tu fait, que peux-tu faire pour moi, d'où viens-tu, comment te joindre.
+
+Les études de cas vivent sous `/projets/<slug>/` (français) et `/en/work/<slug>/` (anglais). **Règle pour QuickEat : ne dire que ce que le produit fait aujourd'hui.** La liste noire est dans le dépôt QuickEat (`docs/communication.md`) : aucun nombre de clients, pas de Mobile Money, pas de commande à emporter à l'écrit. Les captures viennent de « Le Béninois », restaurant fictif de préproduction.
 
 ## Choix qui ont une raison
 
@@ -69,6 +72,6 @@ Ce qui coûtait, et ne doit pas revenir :
 
 ## Reste à faire
 
-- Vraies captures de QuickEat et de l'application d'assurance : leur visuel est pour l'instant une maquette CSS signalée comme illustration (`visual: { kind: 'image', ... }` dans `projects.ts` pour la remplacer).
+- Vraies captures de l'application d'assurance et d'ICIBillet Scan : l'assurance a une maquette CSS signalée comme illustration, ICIBillet un visuel de présentation.
 - Une photo pour remplacer la silhouette de la carte d'identité (`src/components/IdCard.astro`).
 - Mettre le CV à jour.

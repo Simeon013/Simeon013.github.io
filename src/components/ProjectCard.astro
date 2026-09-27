@@ -1,5 +1,7 @@
 ---
 import { Image } from 'astro:assets';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { caseStudyPath } from '../data/case-studies';
 import type { Project } from '../data/projects';
 import { useTranslations, type Locale } from '../i18n/ui';
 
@@ -11,6 +13,7 @@ interface Props {
 const { project, locale } = Astro.props;
 const t = useTranslations(locale);
 const { visual } = project;
+const caseHref = project.caseStudy ? getRelativeLocaleUrl(locale, caseStudyPath[locale](project.caseStudy)) : undefined;
 ---
 
 <article class="card" data-reveal data-flicker>
@@ -60,6 +63,13 @@ const { visual } = project;
   </p>
   <h3 class="card__name">{project.name}</h3>
   <p class="card__summary">{project.summary[locale]}</p>
+  {
+    caseHref && (
+      <a class="card__case" href={caseHref}>
+        {t('work.caseStudy')}
+      </a>
+    )
+  }
   <div class="card__foot">
     <ul class="card__stack">{project.stack.map((s) => <li>{s}</li>)}</ul>
     {
@@ -209,6 +219,28 @@ const { visual } = project;
   }
   .card__stack {
     color: var(--muted);
+  }
+  .card__case {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--green);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  .card__case:hover {
+    animation: case-jitter 0.3s steps(2) infinite;
+  }
+  @keyframes case-jitter {
+    0% {
+      text-shadow: -2px 0 var(--violet);
+    }
+    100% {
+      text-shadow: 2px 0 var(--violet);
+    }
   }
   .card__links a {
     min-height: 44px;

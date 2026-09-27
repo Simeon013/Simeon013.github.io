@@ -80,6 +80,16 @@ const fr = {
   'form.errName': 'Indique ton nom.',
   'form.errEmail': 'Indique une adresse e-mail valide, par exemple nom@domaine.com.',
   'form.errMessage': 'Écris ton message.',
+  'case.back': 'Tous les projets',
+  'case.problem': 'Le problème',
+  'case.built': 'Ce qui a été construit',
+  'case.role': 'Ma part',
+  'case.choices': 'Les choix qui comptent',
+  'case.status': 'Où en est le projet',
+  'case.next': 'Étude de cas suivante',
+  'case.ctaTitle': 'Un projet du même genre ?',
+  'case.ctaText': 'Parlons-en : je réponds sur WhatsApp comme par e-mail.',
+  'work.caseStudy': 'Lire l’étude de cas',
   'footer.signal': 'Signal émis depuis Cotonou, Bénin',
 } as const;
 
@@ -163,6 +173,16 @@ const en: Record<UiKey, string> = {
   'form.errName': 'Enter your name.',
   'form.errEmail': 'Enter a valid email address, like name@domain.com.',
   'form.errMessage': 'Write your message.',
+  'case.back': 'All projects',
+  'case.problem': 'The problem',
+  'case.built': 'What was built',
+  'case.role': 'My part',
+  'case.choices': 'Choices that matter',
+  'case.status': 'Where it stands',
+  'case.next': 'Next case study',
+  'case.ctaTitle': 'A similar project?',
+  'case.ctaText': 'Let’s talk: I answer on WhatsApp and by email.',
+  'work.caseStudy': 'Read the case study',
   'footer.signal': 'Signal sent from Cotonou, Benin',
 };
 

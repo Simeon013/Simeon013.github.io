@@ -5,10 +5,18 @@ import { locales, useTranslations, type Locale } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
+  /** Titre et description propres à la page ; par défaut ceux de l'accueil. */
+  title?: string;
+  description?: string;
+  /** Chemin de la page dans chaque langue (« projets/quickeat », « work/quickeat »). */
+  paths?: Record<Locale, string>;
 }
 
-const { locale } = Astro.props;
+const { locale, paths } = Astro.props;
 const t = useTranslations(locale);
+const title = Astro.props.title ?? t('meta.title');
+const description = Astro.props.description ?? t('meta.description');
+const urlOf = (l: Locale) => getAbsoluteLocaleUrl(l, paths?.[l] ?? '');
 // Polices du haut de page préchargées : sans ça, le texte s'affichait dans une
 // police de secours puis sautait à l'arrivée de la vraie (décalage CLS mesuré).
 const fontPreloads = [
@@ -16,7 +24,7 @@ const fontPreloads = [
   (await import('@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2?url')).default,
   (await import('@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-300-normal.woff2?url')).default,
 ];
-const pageUrl = getAbsoluteLocaleUrl(locale, '');
+const pageUrl = urlOf(locale);
 // Vignette générée par scripts/og-image.py ; les réseaux exigent une URL absolue.
 const ogImage = new URL(`/og-${locale}.png`, Astro.site).href;
 ---
@@ -26,27 +34,27 @@ const ogImage = new URL(`/og-${locale}.png`, Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{t('meta.title')}</title>
-    <meta name="description" content={t('meta.description')} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
     <meta name="theme-color" content="#000000" />
     {fontPreloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
     <link rel="canonical" href={pageUrl} />
-    {locales.map((l) => <link rel="alternate" hreflang={l} href={getAbsoluteLocaleUrl(l, '')} />)}
-    <link rel="alternate" hreflang="x-default" href={getAbsoluteLocaleUrl('fr', '')} />
+    {locales.map((l) => <link rel="alternate" hreflang={l} href={urlOf(l)} />)}
+    <link rel="alternate" hreflang="x-default" href={urlOf('fr')} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Siméon Daouda" />
     <meta property="og:url" content={pageUrl} />
     <meta property="og:locale" content={locale === 'fr' ? 'fr_FR' : 'en_US'} />
     <meta property="og:locale:alternate" content={locale === 'fr' ? 'en_US' : 'fr_FR'} />
-    <meta property="og:title" content={t('meta.title')} />
-    <meta property="og:description" content={t('meta.description')} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={t('meta.ogAlt')} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={t('meta.title')} />
-    <meta name="twitter:description" content={t('meta.description')} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
