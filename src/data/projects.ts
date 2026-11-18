@@ -2,7 +2,7 @@ import type { ImageMetadata } from 'astro';
 import type { Locale } from '../i18n/ui';
 import icibillet from '../assets/projects/icibillet.png';
 import layersTec from '../assets/projects/layers-tec.png';
-import olaCompagny from '../assets/projects/ola-compagny.png';
+import ocDigital from '../assets/projects/oc-digital.png';
 import quickeatDashboard from '../assets/case-studies/quickeat/tableau-de-bord.png';
 
 export type Localized = Record<Locale, string>;
@@ -72,22 +72,22 @@ export const projects: Project[] = [
   },
   {
     id: 'client-sites',
-    name: 'Layers-Tec · Ola Compagny',
+    name: 'Layers-Tec · OC Digital',
     category: { fr: 'Sites web', en: 'Websites' },
     summary: {
-      fr: 'Sites d’une startup tech et d’une agence de communication digitale, avec un back-office pour gérer contenus et blog.',
-      en: 'Websites for a tech startup and a digital communication agency, with a back office for content and blog.',
+      fr: 'Sites d’une startup tech et d’une agence de communication digitale, avec un back-office pour gérer contenus et blog. Même chose pour le Groupe ADECO.',
+      en: 'Websites for a tech startup and a digital communication agency, with a back office for content and blog. Same for Groupe ADECO.',
     },
     stack: ['Laravel', 'Filament'],
     links: [
       { label: 'layers-tec.com', url: 'https://layers-tec.com/' },
-      { label: 'olacompagny.com', url: 'https://olacompagny.com/' },
+      // OC Digital (ex-Ola Compagny) : olacompagny.com ne répondait plus le 17/11/2026, lien retiré.
     ],
     visual: {
       kind: 'image',
       images: [
         { src: layersTec, alt: { fr: 'Site de Layers-Tec', en: 'Layers-Tec website' } },
-        { src: olaCompagny, alt: { fr: 'Site d’Ola Compagny', en: 'Ola Compagny website' } },
+        { src: ocDigital, alt: { fr: 'Site d’OC Digital', en: 'OC Digital website' } },
       ],
     },
   },
@@ -159,7 +159,7 @@ export const lab: LabItem[] = [
 export const skills: { group: Localized; items: string[] }[] = [
   { group: { fr: 'Web', en: 'Web' }, items: ['Laravel', 'Filament', 'PHP', 'Tailwind CSS', 'Next.js', 'FastAPI'] },
   { group: { fr: 'Mobile', en: 'Mobile' }, items: ['Flutter', 'Dart'] },
-  { group: { fr: 'Données', en: 'Data' }, items: ['MySQL'] },
+  { group: { fr: 'Données', en: 'Data' }, items: ['MySQL', 'PostgreSQL', 'Supabase'] },
   { group: { fr: 'Outils', en: 'Tools' }, items: ['Git', 'GitHub', 'Figma', 'Canva', 'Premiere Pro'] },
 ];
 
@@ -167,12 +167,21 @@ export type JourneyStep = { period: Localized; title: Localized; place: string; 
 
 export const journey: JourneyStep[] = [
   {
+    period: { fr: '2024 — aujourd’hui', en: '2024 — today' },
+    title: { fr: 'Cofondateur & CTO', en: 'Co-founder & CTO' },
+    place: 'Layers-Tec',
+    detail: {
+      fr: 'L’interface web de QuickEat (Next.js) et des contributions à son API (FastAPI), les sites de Layers-Tec, d’OC Digital et du Groupe ADECO, la direction technique.',
+      en: 'QuickEat’s web interface (Next.js) and contributions to its API (FastAPI), the Layers-Tec, OC Digital and Groupe ADECO websites, technical leadership.',
+    },
+  },
+  {
     period: { fr: '2022 — aujourd’hui', en: '2022 — today' },
     title: { fr: 'Développeur freelance', en: 'Freelance developer' },
     place: 'Freelance',
     detail: {
-      fr: 'Sites web avec back-office, applications mobiles Flutter et outils métier pour des entreprises, une ONG et des startups.',
-      en: 'Websites with back offices, Flutter mobile apps and business tools for companies, an NGO and startups.',
+      fr: 'Applications mobiles Flutter : ICIBillet Scan, gestion d’assurance auto, commande pour une pâtisserie.',
+      en: 'Flutter mobile apps: ICIBillet Scan, car insurance management, ordering for a bakery.',
     },
   },
   {
@@ -205,5 +214,6 @@ export const contact = {
   github: 'https://github.com/Simeon013',
   // Formulaire Formspree déjà utilisé par l'ancien site : l'identifiant est public par nature.
   formEndpoint: 'https://formspree.io/f/mqkrvevv',
-  cv: '/cv/simeon-daouda-cv.pdf',
+  // Généré par `npm run cv` à partir de cv/contenu.mjs : ne pas remplacer le PDF à la main.
+  cv: { fr: '/cv/simeon-daouda-cv.pdf', en: '/cv/simeon-daouda-cv-en.pdf' },
 };

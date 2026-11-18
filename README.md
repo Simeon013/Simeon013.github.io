@@ -31,7 +31,7 @@ Avec un domaine personnalisé plus tard : changer `site` dans `astro.config.mjs`
 | Projets, expérimentations, compétences, parcours, contact | `src/data/projects.ts` |
 | Études de cas (QuickEat, ICIBillet Scan) | `src/data/case-studies.ts`, captures dans `src/assets/case-studies/` |
 | Captures des projets | `src/assets/projects/` (PNG ou JPG, converties en WebP au build) |
-| CV téléchargeable | `public/cv/simeon-daouda-cv.pdf` |
+| CV téléchargeable (fr / en) | `cv/contenu.mjs`, puis `npm run cv` → `public/cv/simeon-daouda-cv.pdf` et `simeon-daouda-cv-en.pdf` |
 | Globe animé | `src/scripts/globe.ts` |
 | Effets glitch (titres, déchirures, apparitions) | `src/scripts/effects.ts` |
 | Titre qui glitche dans la présentation | `src/scripts/glitch-title.ts` |
@@ -59,6 +59,20 @@ Les études de cas vivent sous `/projets/<slug>/` (français) et `/en/work/<slug
 - **Polices auto-hébergées** (`@fontsource`) plutôt que Google Fonts : une connexion à un domaine tiers en moins au chargement.
 - **Les captures passent par `astro:assets`.** Les PNG d'origine pesaient 3,8 Mo à eux seuls ; convertis en WebP aux bonnes tailles, ils tombent à quelques dizaines de Ko chacun.
 
+## Le CV
+
+Le CV est du HTML (`cv/contenu.mjs` pour le texte, `cv/style.css` pour la mise en page) que `npm run cv` imprime en PDF avec Chrome (chemin dans `CHROME_PATH` si Chrome n'est pas à l'emplacement habituel). Le script échoue si le CV dépasse une page.
+
+**Pourquoi pas Canva, comme l'ancien.** L'ancien CV était fait sous Canva : chaque changement se refaisait à la main, la version anglaise n'existait pas, et il avait fini par dire autre chose que le site (lien `/darkfolio/` périmé, pas de Layers-Tec, compétences de 2022). Ici, une ligne de texte change et les deux PDF se régénèrent.
+
+Ce qui a cassé en route, à ne pas refaire :
+- **Puces `>` en position absolue** : Chrome les rangeait à part, et le texte extrait du PDF (celui que lisent les logiciels de tri des recruteurs) sortait dans le désordre, les puces toutes à la fin. Elles sont maintenant en ligne.
+- **Titres de section avec un grand espacement de lettres** : extraits en « P R O F I L ». Espacement à zéro.
+- **Page à hauteur fixe en flex** : quand le contenu s'allongeait, le trait vert était écrasé à zéro au lieu de déborder (`flex-shrink: 0`).
+- **Vert du site (`#1EF2A0`) en texte sur fond blanc** : illisible. Il ne sert qu'aux traits ; le texte vert est en `#087a52`.
+
+Contenu décidé avec Siméon : une page, pas de certifications en ligne, LinkedIn comme seul réseau, pas d'Axory.
+
 ## Performance
 
 Mesurée avec Lighthouse, profil mobile (téléphone milieu de gamme, 4G lente simulée) : 99–100 en performance, 100 en accessibilité, bonnes pratiques et SEO. Avant les corrections ci-dessous : 80, avec 3,4 s avant l'affichage du contenu principal.
@@ -74,4 +88,3 @@ Ce qui coûtait, et ne doit pas revenir :
 
 - Vraies captures de l'application d'assurance et d'ICIBillet Scan : l'assurance a une maquette CSS signalée comme illustration, ICIBillet un visuel de présentation.
 - Une photo pour remplacer la silhouette de la carte d'identité (`src/components/IdCard.astro`).
-- Mettre le CV à jour.

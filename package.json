@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "validate": "astro check && astro build"
+    "validate": "astro check && astro build",
+    "cv": "node cv/generer.mjs"
   },
   "engines": {
     "node": ">=22.12.0"

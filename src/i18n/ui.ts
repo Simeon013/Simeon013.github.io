@@ -27,7 +27,7 @@ const fr = {
   'hero.coords': '6,37° N · 2,42° E',
   'about.title': 'À propos',
   'about.p1':
-    'Je m’appelle Siméon Daouda, mercenaire du développement originaire du Bénin. Depuis 2022, je conçois en freelance des applications web et mobiles pour des entreprises, des startups et une ONG.',
+    'Je m’appelle Siméon Daouda, mercenaire du développement originaire du Bénin. Freelance depuis 2022, je conçois des applications web et mobiles pour des entreprises et des startups. Depuis 2024, je suis aussi cofondateur et CTO de Layers-Tec.',
   'about.p2':
     'Mon terrain : Laravel côté web, Flutter côté mobile. J’aime les projets où l’on part d’un vrai problème — une file d’attente, une commande au restaurant, un billet à contrôler — et où l’on repart avec un outil qui tourne.',
   'about.p3':
@@ -121,7 +121,7 @@ const en: Record<UiKey, string> = {
   'hero.coords': '6.37° N · 2.42° E',
   'about.title': 'About',
   'about.p1':
-    'I’m Siméon Daouda, a mercenary of development from Benin. Since 2022 I’ve been building web and mobile apps as a freelancer for companies, startups and an NGO.',
+    'I’m Siméon Daouda, a mercenary of development from Benin. Freelancing since 2022, I build web and mobile apps for companies and startups. Since 2024 I’ve also been co-founder and CTO of Layers-Tec.',
   'about.p2':
     'My ground: Laravel on the web, Flutter on mobile. I like projects that start from a real problem — a queue, a restaurant order, a ticket to check — and end with a tool that runs.',
   'about.p3': 'Between missions, I build small projects to try an idea or a technology, and I share them.',

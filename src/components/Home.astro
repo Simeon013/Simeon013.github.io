@@ -51,7 +51,7 @@ const services = [
         <p class="hero__intro">{t('hero.intro')}</p>
         <div class="hero__ctas">
           <a class="button button--solid" href="#work">{t('hero.ctaWork')}</a>
-          <a class="button" href={contact.cv} download>{t('hero.ctaCv')}</a>
+          <a class="button" href={contact.cv[locale]} download>{t('hero.ctaCv')}</a>
         </div>
         <ul class="hero__socials">
           <li><a href={contact.github} target="_blank" rel="noopener">GitHub</a></li>
