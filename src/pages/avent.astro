@@ -54,17 +54,18 @@ import '@fontsource/chakra-petch/700.css';
       <span class="chrono" id="chrono">0:00</span>
     </div>
     <div class="titre-jour"><h2 id="jeu-titre">Jour 1</h2><span class="etoiles" id="jeu-etoiles"></span></div>
-    <p class="regle-jour" id="jeu-regle"></p>
-    <div class="plateau" id="plateau"><canvas id="toile"></canvas></div>
+    <div class="ligne-info"><p class="regle-jour" id="jeu-regle"></p><p class="message" id="message" role="status"></p></div>
+    <div class="zone-plateau" id="zone-plateau">
+      <div class="plateau" id="plateau"><canvas id="toile"></canvas></div>
+    </div>
     <div class="legende" id="legende">
-      <div class="leg"><svg viewBox="0 0 84 38" aria-hidden="true"><rect x="1" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M1 19H19V37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 0)"/><circle cx="19" cy="19" r="8" fill="#ff5a5f"/><rect x="47" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M19 1V19H37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(46 0)"/><circle cx="65" cy="19" r="8" fill="#ff5a5f"/></svg><span><b class="rouge">Boule rouge</b> : le fil <b>tourne</b> sur la case, dans n'importe quel sens.</span></div>
-      <div class="leg"><svg viewBox="0 0 84 38" aria-hidden="true"><rect x="1" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M1 19H37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 0)"/><circle cx="19" cy="19" r="8" fill="#ffce5c"/><rect x="47" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M19 1V37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(46 0)"/><circle cx="65" cy="19" r="8" fill="#ffce5c"/></svg><span><b class="or">Boule dorée</b> : le fil va <b>tout droit</b>, à l'horizontale ou à la verticale.</span></div>
+      <div class="leg"><svg viewBox="0 0 84 38" aria-hidden="true"><rect x="1" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M1 19H19V37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 0)"/><circle cx="19" cy="19" r="8" fill="#ff5a5f"/><rect x="47" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M19 1V19H37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(46 0)"/><circle cx="65" cy="19" r="8" fill="#ff5a5f"/></svg><span><b class="rouge">Rouge</b> : le fil tourne</span></div>
+      <div class="leg"><svg viewBox="0 0 84 38" aria-hidden="true"><rect x="1" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M1 19H37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 0)"/><circle cx="19" cy="19" r="8" fill="#ffce5c"/><rect x="47" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M19 1V37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(46 0)"/><circle cx="65" cy="19" r="8" fill="#ffce5c"/></svg><span><b class="or">Dorée</b> : tout droit</span></div>
     </div>
     <div class="progression">
       <div class="jauge"><i id="jauge"></i></div>
-      <div class="compte"><span id="compte">0 / 0 ampoules</span><span id="record">Ton record : —</span></div>
+      <div class="compte"><span id="compte">0 / 0 ampoules</span><span id="record">Record : —</span></div>
     </div>
-    <p class="message" id="message" role="status"></p>
     <div class="ligne-boutons">
       <button class="btn" id="b-annuler">Annuler</button>
       <button class="btn" id="b-recommencer">Recommencer</button>
@@ -86,7 +87,7 @@ import '@fontsource/chakra-petch/700.css';
       <li><span class="n">5</span><span>Sur une <b class="or">boule dorée</b>, le fil doit aller <b>tout droit</b> (il traverse la case).</span></li>
       <li><span class="n">6</span><span>On ne passe jamais sur un <b>cadeau</b> ou un <b>sapin</b>.</span></li>
     </ul>
-    <p style="margin:0;color:var(--doux)">Tu t'es trompé ? Reviens en arrière en glissant sur le fil, ou touche une case déjà allumée pour repartir de là. « Indice » te montre la case suivante (+5 s).</p>
+    <p style="margin:0;color:var(--doux)">Tu t'es trompé ? Reviens en arrière en glissant sur le fil, ou touche une case déjà allumée pour repartir de là. « Indice » te montre la case suivante, autant de fois que tu veux : chaque indice ajoute 5 secondes à ton temps.</p>
     <button class="btn btn-principal" id="regle-ok">C'est parti</button>
   </div>
 </div>
@@ -97,6 +98,7 @@ import '@fontsource/chakra-petch/700.css';
     <span class="etiquette" id="vic-jour">Jour 1</span>
     <h3 id="vic-titre">La guirlande brille !</h3>
     <div class="gros-temps" id="vic-temps">0:00</div>
+    <span class="badge-indices" id="vic-indices"></span>
     <p style="margin:0;color:var(--doux)" id="vic-detail"></p>
     <form class="nom" id="f-nom">
       <input id="nom" maxlength="16" placeholder="Ton prénom pour le classement" autocomplete="nickname">
@@ -213,6 +215,36 @@ import '@fontsource/chakra-petch/700.css';
 @media (prefers-reduced-motion: reduce) { .avent .jauge i { transition: none; } }
 
 .avent [hidden] { display: none !important; }
+/* en jeu : tout l'écran du téléphone, sans défilement ; la grille prend la place qui reste */
+.avent .app.en-jeu { height: 100vh; height: 100dvh; min-height: 0; padding-block: 8px; gap: 0; overflow: hidden; }
+.avent .app.en-jeu #ecran-jeu { flex: 1; min-height: 0; gap: 7px; }
+.avent .app.en-jeu .titre-jour h2 { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.avent .app.en-jeu .regle-jour { font-size: 12.5px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.avent .zone-plateau { flex: 1; min-height: 140px; position: relative; display: flex; align-items: center; justify-content: center; }
+.avent .zone-plateau .plateau { width: 100%; aspect-ratio: auto; flex: none; }
+.avent .ligne-info { min-height: 2.7em; display: grid; align-items: center; }
+.avent .ligne-info .message { margin: 0; text-align: left; font-size: 13px; line-height: 1.35; min-height: 0; }
+.avent .ligne-info .message:empty { display: none; }
+.avent .ligne-info .message:not(:empty) + * , .avent .ligne-info:has(.message:not(:empty)) .regle-jour { display: none; }
+.avent .app.en-jeu .legende { grid-template-columns: 1fr 1fr; gap: 6px; }
+.avent .app.en-jeu .leg { grid-template-columns: 48px 1fr; gap: 8px; padding: 5px 8px; font-size: 12.5px; line-height: 1.2; border-radius: 10px; }
+.avent .app.en-jeu .leg svg { width: 48px; height: 22px; }
+.avent .app.en-jeu .progression { gap: 3px; }
+.avent .app.en-jeu .jauge { height: 7px; }
+.avent .app.en-jeu .compte { font-size: 12px; }
+.avent .app.en-jeu .ligne-boutons .btn { padding: 9px 2px; font-size: 12.5px; }
+.avent .app.en-jeu .barre-jeu { min-height: 34px; }
+.avent .ligne-boutons .btn:disabled { opacity: .45; cursor: not-allowed; }
+/* l'accueil, plus compact */
+.avent .accueil-titre { font-size: 34px; }
+.avent .demo { grid-template-columns: 112px 1fr; gap: 12px; padding: 12px; }
+.avent .demo canvas { width: 112px; height: 112px; }
+.avent .demo .regles { gap: 4px; font-size: 13px; line-height: 1.35; }
+.avent .fenetre { gap: 10px; padding: 16px; }
+.avent .gros-temps { font-size: 44px; }
+.avent .badge-indices { justify-self: start; font-size: 13px; color: var(--doux); border: 1px solid var(--ligne); border-radius: 999px; padding: 3px 10px; }
+.avent .badge-indices.sans { color: var(--or); border-color: var(--or); }
+
 .avent .pied { font-size: 12px; color: var(--pale); }
 .avent .pied a { color: var(--doux); }
 .avent .compte-rebours { font-family: var(--titre); font-weight: 700; color: var(--or); font-size: 22px; font-variant-numeric: tabular-nums; }
@@ -258,6 +290,7 @@ function fmt(ms) {
 // ---------- écrans ----------
 function montrer(nom) {
   for (const e of ["accueil", "calendrier", "jeu"]) $("ecran-" + e).hidden = e !== nom;
+  document.querySelector(".avent .app").classList.toggle("en-jeu", nom === "jeu");
   $("cal-flamme").textContent = $("jeu-flamme").textContent = flamme();
   if (nom === "calendrier") dessinerCalendrier();
   if (nom === "accueil") preparerAccueil();
@@ -305,30 +338,41 @@ function preparerAccueil() {
 
 // ---------- le jeu ----------
 const cle = (p) => p[0] + "," + p[1];
+let indicesPris = 0;
 let niv, cases, chemin, debut, fini, penalite, indiceCase, indiceFin, minuteur, taille, pas, ox, oy, glisse = false, dernier = null, celebration = 0;
 
 function lancer(jour) {
   niv = NIVEAUX.find((n) => n.jour === jour);
   cases = new Set(niv.cases.map(cle));
   chemin = [niv.depart];
-  debut = null; fini = false; penalite = 0; indiceCase = null; celebration = 0;
+  debut = null; fini = false; penalite = 0; indicesPris = 0; indiceCase = null; celebration = 0;
   $("jeu-titre").textContent = niv.jour ? `Jour ${niv.jour} · ${niv.titre}` : "Entraînement";
   $("jeu-etoiles").innerHTML = "★".repeat(niv.etoiles) + `<span class="off">${"★".repeat(5 - niv.etoiles)}</span>`;
   $("jeu-etoiles").setAttribute("aria-label", `Difficulté ${niv.etoiles} sur 5`);
   $("jeu-regle").textContent = niv.regle;
   $("legende").hidden = !Object.keys(niv.boules).length;
+  majIndices();
   musique.demarrer();
-  $("record").textContent = "Ton record : " + (memoire.records[niv.jour] ? fmt(memoire.records[niv.jour]) : "—");
+  $("record").textContent = "Record : " + (memoire.records[niv.jour] ? fmt(memoire.records[niv.jour]) : "—");
   message("Pose ton doigt sur l'éclair et glisse.");
   montrer("jeu");
   redimensionner();
+  requestAnimationFrame(redimensionner);      // une deuxième fois, une fois la mise en page posée
   majChrono();
   if (!memoire.regleVue) { ouvrirRegle(); memoire.regleVue = true; ecrire(memoire); }
 }
 
-function message(t, erreur) { const m = $("message"); m.textContent = t; m.classList.toggle("erreur", !!erreur); }
+let minuteurMessage;
+function message(t, erreur) {
+  // une bulle posée sur la grille, qui s'efface d'elle-même pour ne cacher aucune case longtemps
+  const m = $("message"); m.textContent = t; m.classList.toggle("erreur", !!erreur);
+  clearTimeout(minuteurMessage);
+  if (t) minuteurMessage = setTimeout(() => { m.textContent = ""; }, erreur ? 2600 : 3200);
+}
 
 function redimensionner() {
+  const z = $("zone-plateau").getBoundingClientRect(), cote = Math.floor(Math.min(z.width, z.height));
+  $("plateau").style.width = $("plateau").style.height = cote + "px";
   const c = $("toile"), r = $("plateau").getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
   c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
   taille = r.width;
@@ -536,8 +580,10 @@ requestAnimationFrame(boucle);
 // ---------- boutons ----------
 $("b-annuler").onclick = () => { if (!fini && chemin.length > 1) { chemin.pop(); son.retour(); apresCoup(); } };
 $("b-recommencer").onclick = () => { clearInterval(minuteur); lancer(niv.jour); };
+function majIndices() { $("b-indice").innerHTML = 'Indice<br><small style="opacity:.7">+5&nbsp;s</small>'; }
 $("b-indice").onclick = () => {
   if (fini) return;
+  indicesPris++;
   let k = 0;
   while (k < chemin.length && meme(chemin[k], niv.solution[k])) k++;
   penalite += 5000; if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); }
@@ -567,6 +613,8 @@ function gagner() {
   setTimeout(() => {
     $("vic-jour").textContent = niv.jour ? `Jour ${niv.jour} · ${niv.titre}` : "Entraînement";
     $("vic-temps").textContent = fmt(t);
+    $("vic-indices").textContent = indicesPris ? `${indicesPris} indice${indicesPris > 1 ? "s" : ""} utilisé${indicesPris > 1 ? "s" : ""} (+${indicesPris * 5} s)` : "Sans indice !";
+    $("vic-indices").classList.toggle("sans", !indicesPris);
     $("vic-detail").textContent = nouveau ? (ancien ? `Nouveau record ! (avant : ${fmt(ancien)})` : "Premier temps enregistré sur cet appareil.") : `Ton record reste ${fmt(ancien)}.`;
     $("nom").value = memoire.nom || "";
     $("f-nom").hidden = !!memoire.nom;
@@ -600,7 +648,7 @@ $("f-nom").addEventListener("submit", (e) => {
 });
 $("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; lancer(niv.jour); };
 $("vic-partager").onclick = async () => {
-  const texte = `</Avent> · ${niv.jour ? "jour " + niv.jour : "entraînement"} : guirlande allumée en ${$("vic-temps").textContent}` +
+  const texte = `</Avent> · ${niv.jour ? "jour " + niv.jour : "entraînement"} : guirlande allumée en ${$("vic-temps").textContent}` + (indicesPris ? "" : " sans indice") +
     (flamme() ? ` · flamme ${flamme()}` : "") + ". Tu fais mieux ?";
   const url = location.origin + "/avent";
   try {
