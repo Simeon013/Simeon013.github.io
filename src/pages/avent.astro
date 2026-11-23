@@ -1,0 +1,746 @@
+---
+/* Le jeu de l'Avent « Les guirlandes » : une grille par jour du 1er au 24 décembre 2026.
+   Les grilles viennent de scripts/avent-niveaux.py (src/data/avent-niveaux.json) ; tout le jeu tourne dans la
+   page (canvas, son synthétisé, temps et flamme gardés sur l'appareil). */
+import Base from '../layouts/Base.astro';
+import '@fontsource/chakra-petch/700.css';
+---
+
+<Base
+  locale="fr"
+  title="Les guirlandes · le jeu de l'Avent de Siméon Daouda"
+  description="Un casse-tête par jour du 1er au 24 décembre : relie l'éclair à l'étoile en passant par toutes les cases, et rallume la guirlande. Gratuit, sur téléphone."
+  paths={{ fr: 'avent', en: '' }}
+>
+<main class="avent">
+<div class="app">
+  <!-- ACCUEIL -->
+  <section id="ecran-accueil" class="ecran">
+    <div class="entete"><span class="marque">&lt;/Avent&gt;</span><button class="btn-son" data-son aria-label="Son"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path data-onde fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><span data-son-texte>Son</span></button></div>
+    <h1 class="accueil-titre">Les <span>guirlandes</span></h1>
+    <div class="carte demo">
+      <canvas id="demo" width="300" height="300" aria-label="Démonstration : un fil passe par toutes les cases"></canvas>
+      <ul class="regles">
+        <li><span class="n">1</span><span>Pose ton doigt sur l'<b>éclair</b>.</span></li>
+        <li><span class="n">2</span><span>Glisse de case en case : chaque case allume son ampoule.</span></li>
+        <li><span class="n">3</span><span>Passe par <b>toutes</b> les cases, puis finis sur l'<b>étoile</b>.</span></li>
+        <li><span class="n">4</span><span><b class="rouge">Boule rouge</b> : le fil tourne. <b class="or">Boule dorée</b> : tout droit.</span></li>
+      </ul>
+    </div>
+    <p style="margin:0;color:var(--doux)">Une nouvelle grille chaque jour du 1er au 24 décembre, de plus en plus dure. Le plus rapide du jour gagne.</p>
+    <p class="carte" id="ouverture" hidden style="margin:0">Les cases s'ouvrent le <b>1er décembre</b> à minuit, heure de Cotonou. Ouverture dans <span class="compte-rebours" id="rebours"></span>. En attendant, entraîne-toi !</p>
+    <button class="btn btn-principal" id="jouer">Jouer</button>
+    <button class="btn" id="voir-calendrier">Voir le calendrier</button>
+    <p class="pied">Tes temps et ta flamme restent sur cet appareil : pas de compte. Un jeu imaginé et développé par <a href="/">Siméon Daouda</a>, développeur web et mobile à Cotonou.</p>
+  </section>
+
+  <!-- CALENDRIER -->
+  <section id="ecran-calendrier" class="ecran" hidden>
+    <div class="entete">
+      <button class="retour" id="cal-retour">← Accueil</button>
+      <span class="flamme" title="Ta flamme"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ff8c3c" d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z"/><path fill="#ffce5c" d="M12 11c1 2 3 3 3 6a3 3 0 0 1-6 0c0-2 1-3 2-4 0 1 1 1 1 1 0-1-1-2 0-3z"/></svg><span id="cal-flamme">0</span></span>
+    </div>
+    <h2 style="font-size:28px;color:#fff">Mon Avent</h2>
+    <div class="jours" id="jours"></div>
+    <p class="pied">Une case s'ouvre chaque jour à minuit, heure de Cotonou. Les grilles passées restent jouables ; la flamme monte quand tu termines la grille du jour le jour même.</p>
+  </section>
+
+  <!-- JEU -->
+  <section id="ecran-jeu" class="ecran" hidden>
+    <div class="barre-jeu">
+      <button class="retour" id="jeu-retour">← Calendrier</button>
+      <span class="flamme"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ff8c3c" d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z"/><path fill="#ffce5c" d="M12 11c1 2 3 3 3 6a3 3 0 0 1-6 0c0-2 1-3 2-4 0 1 1 1 1 1 0-1-1-2 0-3z"/></svg><span id="jeu-flamme">0</span></span>
+      <button class="btn-son" data-son aria-label="Son"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path data-onde fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><span data-son-texte>Son</span></button>
+      <span class="chrono" id="chrono">0:00</span>
+    </div>
+    <div class="titre-jour"><h2 id="jeu-titre">Jour 1</h2><span class="etoiles" id="jeu-etoiles"></span></div>
+    <p class="regle-jour" id="jeu-regle"></p>
+    <div class="plateau" id="plateau"><canvas id="toile"></canvas></div>
+    <div class="legende" id="legende">
+      <div class="leg"><svg viewBox="0 0 84 38" aria-hidden="true"><rect x="1" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M1 19H19V37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 0)"/><circle cx="19" cy="19" r="8" fill="#ff5a5f"/><rect x="47" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M19 1V19H37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(46 0)"/><circle cx="65" cy="19" r="8" fill="#ff5a5f"/></svg><span><b class="rouge">Boule rouge</b> : le fil <b>tourne</b> sur la case, dans n'importe quel sens.</span></div>
+      <div class="leg"><svg viewBox="0 0 84 38" aria-hidden="true"><rect x="1" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M1 19H37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 0)"/><circle cx="19" cy="19" r="8" fill="#ffce5c"/><rect x="47" y="1" width="36" height="36" rx="7" fill="#10242a" stroke="#173f33"/><path d="M19 1V37" stroke="#3fbf86" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(46 0)"/><circle cx="65" cy="19" r="8" fill="#ffce5c"/></svg><span><b class="or">Boule dorée</b> : le fil va <b>tout droit</b>, à l'horizontale ou à la verticale.</span></div>
+    </div>
+    <div class="progression">
+      <div class="jauge"><i id="jauge"></i></div>
+      <div class="compte"><span id="compte">0 / 0 ampoules</span><span id="record">Ton record : —</span></div>
+    </div>
+    <p class="message" id="message" role="status"></p>
+    <div class="ligne-boutons">
+      <button class="btn" id="b-annuler">Annuler</button>
+      <button class="btn" id="b-recommencer">Recommencer</button>
+      <button class="btn" id="b-indice">Indice</button>
+      <button class="btn" id="b-regle">Règle</button>
+    </div>
+  </section>
+</div>
+
+<!-- RÈGLE -->
+<div class="voile" id="f-regle" hidden>
+  <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="regle-titre">
+    <h3 id="regle-titre">Comment jouer</h3>
+    <ul class="regles">
+      <li><span class="n">1</span><span>Pose ton doigt sur l'<b>éclair</b> (le départ du courant).</span></li>
+      <li><span class="n">2</span><span>Glisse vers une case voisine (haut, bas, gauche, droite, jamais en diagonale). Le fil suit ton doigt et l'ampoule s'allume.</span></li>
+      <li><span class="n">3</span><span>Le fil doit passer par <b>toutes</b> les cases, une seule fois chacune. L'<b>étoile</b> se relie en dernier.</span></li>
+      <li><span class="n">4</span><span>Sur une <b class="rouge">boule rouge</b>, le fil doit <b>tourner</b> (il arrive d'un côté et repart sur le côté).</span></li>
+      <li><span class="n">5</span><span>Sur une <b class="or">boule dorée</b>, le fil doit aller <b>tout droit</b> (il traverse la case).</span></li>
+      <li><span class="n">6</span><span>On ne passe jamais sur un <b>cadeau</b> ou un <b>sapin</b>.</span></li>
+    </ul>
+    <p style="margin:0;color:var(--doux)">Tu t'es trompé ? Reviens en arrière en glissant sur le fil, ou touche une case déjà allumée pour repartir de là. « Indice » te montre la case suivante (+5 s).</p>
+    <button class="btn btn-principal" id="regle-ok">C'est parti</button>
+  </div>
+</div>
+
+<!-- VICTOIRE -->
+<div class="voile" id="f-victoire" hidden>
+  <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="vic-titre">
+    <span class="etiquette" id="vic-jour">Jour 1</span>
+    <h3 id="vic-titre">La guirlande brille !</h3>
+    <div class="gros-temps" id="vic-temps">0:00</div>
+    <p style="margin:0;color:var(--doux)" id="vic-detail"></p>
+    <form class="nom" id="f-nom">
+      <input id="nom" maxlength="16" placeholder="Ton prénom pour le classement" autocomplete="nickname">
+      <button class="btn" type="submit">OK</button>
+    </form>
+    <div>
+      <span class="etiquette">Classement du jour</span>
+      <ol class="classement" id="classement"></ol>
+      <p class="pied" style="margin:6px 0 0">Les lutins sont des bots, là pour te donner un temps à battre.</p>
+    </div>
+    <div class="deux">
+      <button class="btn" id="vic-rejouer">Rejouer</button>
+      <button class="btn btn-principal" id="vic-suivant" style="font-size:16px">Jour suivant</button>
+    </div>
+    <div class="deux"><button class="btn" id="vic-partager">Partager</button><button class="btn" id="vic-calendrier">Mon Avent</button></div>
+  </div>
+</div>
+
+</main>
+</Base>
+
+<style is:global>
+
+/* Mise en page : une seule colonne façon appli de téléphone ; trois écrans (accueil, calendrier, jeu) et deux fenêtres (règle, victoire).
+   Un seul thème, sombre, voulu : c'est la DA de Siméon (noir, vert, violet) avec l'or des guirlandes. */
+.avent {
+  --fond: #050b0e; --surface: #0b1a1e; --surface-2: #10242a; --ligne: #173f33;
+  --vert: #1ef2a0; --violet: #7218fa; --violet-doux: #8c6fd8; --or: #ffce5c; --rouge: #ff6b6b;
+  --texte: #d3efe2; --doux: #8fb3a2; --pale: #5e7f70;
+  --titre: "Chakra Petch", "Trebuchet MS", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+.avent { min-height: 100vh; background: var(--fond); color: var(--texte); font-family: var(--mono); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.avent .app { max-width: 480px; margin: 0 auto; padding-block: 14px 28px; display: flex; flex-direction: column; gap: 14px; min-height: 100%; }
+.avent h1, .avent h2, .avent h3 { font-family: var(--titre); margin: 0; text-wrap: balance; }
+.avent button { font: inherit; cursor: pointer; }
+.avent button:focus-visible, .avent input:focus-visible { outline: 2px solid var(--vert); outline-offset: 2px; }
+.avent .marque { font-family: var(--titre); font-weight: 700; color: var(--vert); font-size: 22px; letter-spacing: .02em; }
+.avent .marque b { color: var(--texte); font-weight: 600; }
+.avent .etiquette { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--doux); }
+.avent .btn { border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); border-radius: 12px; padding: 12px 14px; font-weight: 500; }
+.avent .btn:hover { border-color: var(--vert); }
+.avent .btn-principal { background: var(--vert); color: #04150d; border-color: var(--vert); font-weight: 600; font-family: var(--titre); font-size: 18px; padding: 14px 18px; }
+.avent .btn-principal:hover { filter: brightness(1.08); }
+.avent .ligne-boutons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.avent .ligne-boutons .btn { padding: 10px 4px; font-size: 13px; }
+.avent .ecran { display: flex; flex-direction: column; gap: 14px; }
+.avent .carte { background: var(--surface); border: 1px solid var(--ligne); border-radius: 16px; padding: 16px; }
+.avent .prototype { font-size: 12px; color: var(--pale); border: 1px dashed var(--ligne); border-radius: 10px; padding: 8px 10px; }
+
+/* accueil */
+.avent .accueil-titre { font-size: 40px; line-height: 1.05; color: #fff; }
+.avent .accueil-titre span { color: var(--or); }
+.avent .demo { display: grid; grid-template-columns: 130px 1fr; gap: 14px; align-items: center; font-size: 14px; }
+.avent .demo canvas { width: 130px; height: 130px; border-radius: 14px; background: var(--surface-2); }
+.avent .regles { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.avent .regles li { display: grid; grid-template-columns: 26px 1fr; gap: 8px; align-items: start; }
+.avent .rouge { color: #ff6b6b; } .or { color: var(--or); }
+.avent .regles .n { font-family: var(--titre); font-weight: 700; color: var(--or); font-size: 18px; line-height: 1.3; }
+
+/* calendrier */
+.avent .entete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.avent .flamme { display: inline-flex; align-items: center; gap: 6px; font-family: var(--titre); font-weight: 700; color: var(--or); font-size: 20px; }
+.avent .flamme svg { width: 22px; height: 22px; }
+.avent .jours { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; }
+.avent .jour { aspect-ratio: 1 / 1.05; border-radius: 12px; border: 1px solid var(--ligne); background: var(--surface); color: var(--texte);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 2px; min-width: 0; }
+.avent .jour .num { font-family: var(--titre); font-weight: 700; font-size: 19px; line-height: 1; }
+.avent .jour .info { font-size: 10px; color: var(--doux); font-variant-numeric: tabular-nums; }
+.avent .jour.dispo { border-color: var(--violet-doux); }
+.avent .jour.fait { background: #0f3a2a; border-color: var(--vert); }
+.avent .jour.fait .info { color: var(--vert); }
+.avent .jour.ferme { opacity: .45; cursor: not-allowed; }
+
+/* jeu */
+.avent .barre-jeu { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.avent .retour { border: none; background: none; color: var(--doux); padding: 6px 0; }
+.avent .chrono { font-family: var(--titre); font-weight: 600; font-size: 22px; color: #fff; font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; }
+.avent .titre-jour { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.avent .titre-jour h2 { font-size: 24px; color: #fff; }
+.avent .etoiles { color: var(--or); letter-spacing: 2px; font-size: 14px; white-space: nowrap; }
+.avent .etoiles .off { color: #2c3b38; }
+.avent .regle-jour { color: var(--doux); font-size: 14px; margin: 0; }
+.avent .plateau { position: relative; width: 100%; aspect-ratio: 1 / 1; touch-action: none; user-select: none; -webkit-user-select: none; }
+.avent .plateau canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 16px; background: var(--surface); }
+.avent .progression { display: grid; gap: 6px; }
+.avent .legende { display: grid; gap: 8px; }
+.avent .leg { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: center; font-size: 13px; color: var(--doux); background: var(--surface); border: 1px solid var(--ligne); border-radius: 12px; padding: 8px 10px; }
+.avent .leg svg { width: 84px; height: 38px; }
+.avent .btn-son { border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); border-radius: 10px; padding: 6px 10px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.avent .btn-son svg { width: 18px; height: 18px; }
+.avent .jauge { height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.avent .jauge i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--vert), var(--or)); transition: width .15s; }
+.avent .compte { display: flex; justify-content: space-between; font-size: 13px; color: var(--doux); font-variant-numeric: tabular-nums; }
+.avent .message { min-height: 1.5em; font-size: 14px; color: var(--or); text-align: center; margin: 0; }
+.avent .message.erreur { color: var(--rouge); }
+
+/* fenêtres */
+.avent .voile { position: fixed; inset: 0; background: rgba(2, 6, 8, .78); display: grid; place-items: center; z-index: 20;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.avent .fenetre { width: min(440px, 100%); max-height: 100%; overflow: auto; background: var(--surface); border: 1px solid var(--ligne); border-radius: 18px; padding: 20px; display: grid; gap: 14px; }
+.avent .fenetre h3 { font-size: 26px; color: #fff; }
+.avent .gros-temps { font-family: var(--titre); font-weight: 700; font-size: 52px; color: var(--or); line-height: 1; font-variant-numeric: tabular-nums; }
+.avent .classement { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
+.avent .classement li { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; padding: 6px 10px; border-radius: 8px; background: var(--surface-2); font-size: 14px; }
+.avent .classement li.bot { color: var(--doux); }
+.avent .classement li.moi { background: #0f3a2a; color: var(--vert); font-weight: 500; }
+.avent .nom { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.avent .nom input { min-width: 0; border-radius: 10px; border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); padding: 10px 12px; font: inherit; }
+.avent .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.avent .deux:has(#vic-suivant[hidden]) { grid-template-columns: 1fr; }
+@media (prefers-reduced-motion: reduce) { .avent .jauge i { transition: none; } }
+
+.avent [hidden] { display: none !important; }
+.avent .pied { font-size: 12px; color: var(--pale); }
+.avent .pied a { color: var(--doux); }
+.avent .compte-rebours { font-family: var(--titre); font-weight: 700; color: var(--or); font-size: 22px; font-variant-numeric: tabular-nums; }
+.avent .jour .cadenas { width: 12px; height: 12px; }
+
+</style>
+
+<script>
+// @ts-nocheck : le jeu est écrit en JavaScript simple (canvas, Web Audio), sans types.
+
+import NIVEAUX from "../data/avent-niveaux.json";
+const COULEURS = ["#ff6b6b", "#ffce5c", "#1ef2a0", "#5abedc", "#8c6fd8", "#ff7896"];
+const $ = (id) => document.getElementById(id);
+
+// ---------- mémoire (sur cet appareil seulement) ----------
+function lire() { try { return JSON.parse(localStorage.getItem("avent-guirlandes") || "{}"); } catch (e) { return {}; } }
+function ecrire(d) { try { localStorage.setItem("avent-guirlandes", JSON.stringify(d)); } catch (e) {} }
+let memoire = Object.assign({ nom: "", records: {}, jourMeme: {} }, lire());
+
+// ---------- le calendrier : le jour J s'ouvre le J décembre à minuit, heure de Cotonou (UTC+1) ----------
+const ANNEE = 2026;
+function maintenantCotonou() { return new Date(Date.now() + 3600 * 1000); }      // lu avec getUTC* : l'heure de Cotonou
+function jourDuJour() {
+  const d = maintenantCotonou();
+  if (d.getUTCFullYear() > ANNEE) return 25;
+  if (d.getUTCFullYear() < ANNEE || d.getUTCMonth() < 11) return 0;
+  return Math.min(25, d.getUTCDate());
+}
+const ouvert = (j) => j === 0 || j <= jourDuJour();
+function flamme() {
+  // jours consécutifs terminés le jour même, jusqu'à aujourd'hui (ou hier, si la grille du jour n'est pas encore faite)
+  let j = Math.min(jourDuJour(), 24), n = 0;
+  if (j >= 1 && !memoire.jourMeme[j]) j--;
+  while (j >= 1 && memoire.jourMeme[j]) { n++; j--; }
+  return n;
+}
+
+function fmt(ms) {
+  const s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+// ---------- écrans ----------
+function montrer(nom) {
+  for (const e of ["accueil", "calendrier", "jeu"]) $("ecran-" + e).hidden = e !== nom;
+  $("cal-flamme").textContent = $("jeu-flamme").textContent = flamme();
+  if (nom === "calendrier") dessinerCalendrier();
+  if (nom === "accueil") preparerAccueil();
+  window.scrollTo(0, 0);
+}
+
+function dessinerCalendrier() {
+  const box = $("jours");
+  box.innerHTML = "";
+  const auj = jourDuJour();
+  for (let j = 1; j <= 24; j++) {
+    const b = document.createElement("button");
+    b.className = "jour";
+    const rec = memoire.records[j];
+    const libre = ouvert(j);
+    b.classList.add(rec ? "fait" : (libre ? "dispo" : "ferme"));
+    const info = rec ? fmt(rec) : (libre ? "jouer" : `${j} déc.`);
+    b.innerHTML = `<span class="num">${j}</span><span class="info">${info}</span>`;
+    b.setAttribute("aria-label", libre ? `Jour ${j}${rec ? ", ton record " + fmt(rec) : ""}` : `Jour ${j}, s'ouvre le ${j} décembre`);
+    if (j === auj) b.style.borderColor = "var(--or)";
+    if (libre) b.onclick = () => lancer(j); else b.disabled = true;
+    box.appendChild(b);
+  }
+}
+
+function preparerAccueil() {
+  const auj = jourDuJour();
+  $("ouverture").hidden = auj > 0;
+  if (auj === 0) {
+    $("jouer").textContent = "S'entraîner";
+    $("jouer").onclick = () => lancer(0);
+    const tic = () => {
+      const fin = Date.UTC(ANNEE, 11, 1) - 3600 * 1000, reste = Math.max(0, fin - Date.now());
+      const h = Math.floor(reste / 3600000), jours = Math.floor(h / 24);
+      $("rebours").textContent = jours ? `${jours} j ${h % 24} h` : `${h} h ${Math.floor(reste / 60000) % 60} min`;
+      if (!reste) location.reload();
+    };
+    tic(); clearInterval(window.__rebours); window.__rebours = setInterval(tic, 30000);
+  } else {
+    const j = Math.min(auj, 24);
+    $("jouer").textContent = auj > 24 ? "Rejouer le sapin du 24" : `Jouer la grille du jour ${j}`;
+    $("jouer").onclick = () => lancer(j);
+  }
+}
+
+// ---------- le jeu ----------
+const cle = (p) => p[0] + "," + p[1];
+let niv, cases, chemin, debut, fini, penalite, indiceCase, indiceFin, minuteur, taille, pas, ox, oy, glisse = false, dernier = null, celebration = 0;
+
+function lancer(jour) {
+  niv = NIVEAUX.find((n) => n.jour === jour);
+  cases = new Set(niv.cases.map(cle));
+  chemin = [niv.depart];
+  debut = null; fini = false; penalite = 0; indiceCase = null; celebration = 0;
+  $("jeu-titre").textContent = niv.jour ? `Jour ${niv.jour} · ${niv.titre}` : "Entraînement";
+  $("jeu-etoiles").innerHTML = "★".repeat(niv.etoiles) + `<span class="off">${"★".repeat(5 - niv.etoiles)}</span>`;
+  $("jeu-etoiles").setAttribute("aria-label", `Difficulté ${niv.etoiles} sur 5`);
+  $("jeu-regle").textContent = niv.regle;
+  $("legende").hidden = !Object.keys(niv.boules).length;
+  musique.demarrer();
+  $("record").textContent = "Ton record : " + (memoire.records[niv.jour] ? fmt(memoire.records[niv.jour]) : "—");
+  message("Pose ton doigt sur l'éclair et glisse.");
+  montrer("jeu");
+  redimensionner();
+  majChrono();
+  if (!memoire.regleVue) { ouvrirRegle(); memoire.regleVue = true; ecrire(memoire); }
+}
+
+function message(t, erreur) { const m = $("message"); m.textContent = t; m.classList.toggle("erreur", !!erreur); }
+
+function redimensionner() {
+  const c = $("toile"), r = $("plateau").getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+  taille = r.width;
+  const marge = taille * 0.04;
+  pas = (taille - 2 * marge) / Math.max(niv.w, niv.h);
+  ox = (taille - pas * niv.w) / 2; oy = (taille - pas * niv.h) / 2;
+  dessiner();
+}
+
+function centre(p) { return [ox + (p[0] + 0.5) * pas, oy + (p[1] + 0.5) * pas]; }
+
+function caseSous(x, y) {
+  const i = Math.floor((x - ox) / pas), j = Math.floor((y - oy) / pas);
+  return cases.has(i + "," + j) || niv.bloques[i + "," + j] ? [i, j] : null;
+}
+
+const voisin = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) === 1;
+const meme = (a, b) => a && b && a[0] === b[0] && a[1] === b[1];
+const dansChemin = (p) => chemin.findIndex((q) => meme(q, p));
+const tourne = (a, b, c) => (a[0] - b[0]) !== (b[0] - c[0]) || (a[1] - b[1]) !== (b[1] - c[1]);
+
+function essayer(p) {
+  const tete = chemin[chemin.length - 1];
+  if (meme(p, tete)) return;
+  if (chemin.length > 1 && meme(p, chemin[chemin.length - 2])) { chemin.pop(); son.retour(); apresCoup(); return; }   // retour en arrière
+  if (!voisin(p, tete)) return;
+  const k = cle(p);
+  if (niv.bloques[k]) { message(niv.bloques[k] === "cadeau" ? "On ne passe pas sur un cadeau." : "On ne passe pas sur un sapin.", true); son.erreur(); return; }
+  if (dansChemin(p) >= 0) return;
+  if (meme(p, niv.arrivee) && chemin.length !== cases.size - 1) {
+    message(`L'étoile se relie en dernier : il reste ${cases.size - 1 - chemin.length} ampoule(s).`, true); son.erreur(); vibrer(30); return;
+  }
+  const boule = chemin.length >= 2 && niv.boules[cle(tete)];          // la case qu'on quitte porte-t-elle une boule ?
+  if (boule && (boule === "tourne") !== tourne(chemin[chemin.length - 2], tete, p)) {
+    message(boule === "tourne" ? "Sur la boule rouge, le fil doit tourner." : "Sur la boule dorée, le fil doit aller tout droit.", true);
+    son.erreur(); vibrer(30); return;
+  }
+  if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); }
+  chemin.push(p);
+  indiceCase = null;
+  vibrer(8);
+  son.pas(chemin.length / cases.size, !!boule);
+  apresCoup();
+}
+
+function apresCoup() {
+  const fait = chemin.length - 1, total = cases.size - 1;
+  if (!fini) message(fait ? "" : "Pose ton doigt sur l'éclair et glisse.");
+  dessiner();
+  if (chemin.length === cases.size && meme(chemin[chemin.length - 1], niv.arrivee)) gagner();
+}
+
+function vibrer(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+
+function tempsEcoule() { return debut ? (fini || performance.now()) - debut + penalite : penalite; }
+function majChrono() { $("chrono").textContent = fmt(tempsEcoule()); }
+
+// ---------- glisser ----------
+const plateau = $("plateau");
+function point(e) { const r = plateau.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+plateau.addEventListener("pointerdown", (e) => {
+  if (fini) return;
+  const [x, y] = point(e), p = caseSous(x, y);
+  if (!p) return;
+  const i = dansChemin(p);
+  if (i >= 0) { chemin = chemin.slice(0, i + 1); apresCoup(); }   // repartir d'une case déjà allumée
+  else essayer(p);
+  glisse = true; dernier = [x, y];
+  plateau.setPointerCapture(e.pointerId);
+});
+plateau.addEventListener("pointermove", (e) => {
+  if (!glisse || fini) return;
+  const [x, y] = point(e);
+  const d = Math.hypot(x - dernier[0], y - dernier[1]), n = Math.max(1, Math.ceil(d / (pas / 5)));
+  for (let k = 1; k <= n; k++) {          // on suit le trajet du doigt pour ne sauter aucune case
+    const p = caseSous(dernier[0] + (x - dernier[0]) * k / n, dernier[1] + (y - dernier[1]) * k / n);
+    if (p) essayer(p);
+  }
+  dernier = [x, y];
+});
+for (const ev of ["pointerup", "pointercancel"]) plateau.addEventListener(ev, () => { glisse = false; });
+
+// ---------- dessin ----------
+function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, r) : g.rect(x, y, w, h); }
+
+function etoile(g, x, y, r, couleur) {
+  g.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + i * Math.PI / 5, rr2 = i % 2 ? r * 0.45 : r;
+    g.lineTo(x + rr2 * Math.cos(a), y + rr2 * Math.sin(a));
+  }
+  g.closePath(); g.fillStyle = couleur; g.fill();
+}
+
+function halo(g, x, y, r, couleur, force) {
+  const d = g.createRadialGradient(x, y, 0, x, y, r);
+  d.addColorStop(0, couleur + (force || "88")); d.addColorStop(1, couleur + "00");
+  g.fillStyle = d; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+}
+
+function ampoule(g, x, y, r, couleur, allumee, angle) {
+  g.save(); g.translate(x, y); g.rotate(angle);
+  g.fillStyle = "#3c4a42"; rr(g, -r * 0.3, -r * 1.05, r * 0.6, r * 0.5, r * 0.08); g.fill();   // le culot
+  g.beginPath(); g.ellipse(0, r * 0.15, r * 0.6, r * 0.82, 0, 0, Math.PI * 2);
+  if (allumee) { g.fillStyle = couleur; g.fill(); g.fillStyle = "rgba(255,255,255,.75)"; g.beginPath(); g.ellipse(-r * 0.2, -r * 0.05, r * 0.12, r * 0.22, 0.3, 0, 7); g.fill(); }
+  else { g.strokeStyle = "#3a514b"; g.lineWidth = Math.max(1, r * 0.12); g.stroke(); }
+  g.restore();
+}
+
+function boule(g, x, y, r, sorte, allumee) {
+  // une boule de Noël : rouge = le fil tourne, dorée = tout droit ; le signe dessus rappelle la règle
+  const coul = sorte === "tourne" ? "#ff5a5f" : "#ffce5c";
+  if (allumee) halo(g, x, y, r * 2.2, coul, "77");
+  g.fillStyle = "#9aa7a2"; rr(g, x - r * 0.22, y - r * 1.18, r * 0.44, r * 0.3, r * 0.06); g.fill();
+  g.strokeStyle = "#9aa7a2"; g.lineWidth = Math.max(1, r * 0.08); g.beginPath(); g.arc(x, y - r * 1.25, r * 0.12, 0, 7); g.stroke();
+  const d = g.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
+  d.addColorStop(0, sorte === "tourne" ? "#ffb3b5" : "#fff1c2"); d.addColorStop(0.45, coul); d.addColorStop(1, sorte === "tourne" ? "#8f1e26" : "#9a6c12");
+  g.globalAlpha = allumee ? 1 : 0.85; g.fillStyle = d; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.globalAlpha = 1;
+  g.fillStyle = "rgba(255,255,255,.8)"; g.beginPath(); g.ellipse(x - r * 0.38, y - r * 0.4, r * 0.16, r * 0.1, -0.6, 0, 7); g.fill();   // le reflet
+}
+
+function eclair(g, x, y, r) {
+  halo(g, x, y, r * 2, "#ffce5c", "66");
+  g.fillStyle = "#ffce5c"; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+  const e = [[0.15, -0.75], [-0.4, 0.1], [-0.02, 0.1], [-0.2, 0.75], [0.42, -0.15], [0.04, -0.15]];
+  g.fillStyle = "#3a2405"; g.beginPath(); e.forEach(([a, b], i) => i ? g.lineTo(x + a * r, y + b * r) : g.moveTo(x + a * r, y + b * r)); g.closePath(); g.fill();
+}
+
+function cadeau(g, x, y, r, couleur) {
+  g.fillStyle = couleur; rr(g, x - r, y - r * 0.6, r * 2, r * 1.6, r * 0.18); g.fill();
+  g.fillStyle = "#ffce5c"; g.fillRect(x - r * 0.15, y - r * 0.6, r * 0.3, r * 1.6); g.fillRect(x - r, y - r * 0.15, r * 2, r * 0.3);
+  g.strokeStyle = "#ffce5c"; g.lineWidth = r * 0.16;
+  g.beginPath(); g.ellipse(x - r * 0.35, y - r * 0.85, r * 0.32, r * 0.22, -0.4, 0, 7); g.stroke();
+  g.beginPath(); g.ellipse(x + r * 0.35, y - r * 0.85, r * 0.32, r * 0.22, 0.4, 0, 7); g.stroke();
+}
+
+function sapin(g, x, y, r) {
+  [[1, 0.35], [0.78, -0.15], [0.55, -0.6]].forEach(([l, h], k) => {
+    g.fillStyle = ["#127a52", "#169863", "#1cb877"][k];
+    g.beginPath(); g.moveTo(x - r * l, y + r * h + r * 0.35); g.lineTo(x + r * l, y + r * h + r * 0.35); g.lineTo(x, y + r * h - r * 0.55); g.closePath(); g.fill();
+  });
+  g.fillStyle = "#7a4a26"; g.fillRect(x - r * 0.14, y + r * 0.7, r * 0.28, r * 0.3);
+}
+
+function dessiner(t) {
+  const c = $("toile"), g = c.getContext("2d"), dpr = c.width / taille;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, taille, taille);
+  const allume = new Set(chemin.map(cle)), r = pas * 0.26;
+  // les cases
+  for (const k of cases) {
+    const [i, j] = k.split(",").map(Number);
+    g.fillStyle = "#10242a"; rr(g, ox + i * pas + pas * 0.05, oy + j * pas + pas * 0.05, pas * 0.9, pas * 0.9, pas * 0.16); g.fill();
+  }
+  for (const [k, sorte] of Object.entries(niv.bloques)) {
+    const [i, j] = k.split(",").map(Number), [x, y] = centre([i, j]);
+    g.fillStyle = "#081418"; rr(g, ox + i * pas + pas * 0.05, oy + j * pas + pas * 0.05, pas * 0.9, pas * 0.9, pas * 0.16); g.fill();
+    if (sorte === "cadeau") cadeau(g, x, y + pas * 0.05, pas * 0.25, ["#ff6b6b", "#8c6fd8", "#5abedc"][(i + j) % 3]); else sapin(g, x, y, pas * 0.32);
+  }
+  // l'indice
+  if (indiceCase && performance.now() < indiceFin) {
+    const [x, y] = centre(indiceCase), a = 0.5 + 0.5 * Math.sin(performance.now() / 120);
+    g.strokeStyle = `rgba(255,206,92,${0.4 + 0.6 * a})`; g.lineWidth = 4; rr(g, x - pas * 0.45, y - pas * 0.45, pas * 0.9, pas * 0.9, pas * 0.16); g.stroke();
+  }
+  // les lueurs, puis le fil, puis les ampoules
+  chemin.forEach((p, i) => { if (i && !niv.boules[cle(p)] && !meme(p, niv.arrivee)) { const [x, y] = centre(p); halo(g, x, y + r * 0.2, r * 2.1, COULEURS[(p[0] * 3 + p[1] * 5) % 6], "55"); } });
+  if (chemin.length > 1) {
+    for (const [w, col] of [[pas * 0.17, "#0f3a2a"], [pas * 0.08, "#3fbf86"]]) {
+      g.strokeStyle = col; g.lineWidth = w; g.lineJoin = g.lineCap = "round"; g.beginPath();
+      chemin.forEach((p, i) => { const [x, y] = centre(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+    }
+  }
+  for (const k of cases) {
+    const p = k.split(",").map(Number);
+    if (meme(p, niv.depart) || meme(p, niv.arrivee)) continue;
+    const [x, y] = centre(p), b = niv.boules[k], on = allume.has(k);
+    if (b) boule(g, x, y, pas * 0.3, b, on);
+    else ampoule(g, x, y, r, COULEURS[(p[0] * 3 + p[1] * 5) % 6], on, 0.25 * Math.sin(p[0] + p[1] * 2));
+  }
+  eclair(g, ...centre(niv.depart), pas * 0.3);
+  const [ex, ey] = centre(niv.arrivee);
+  if (fini) halo(g, ex, ey, pas * (0.9 + 0.15 * Math.sin(performance.now() / 200)), "#ffce5c", "aa");
+  etoile(g, ex, ey, pas * 0.36, fini ? "#ffe08a" : "#b8923f");
+  // la tête du fil
+  if (!fini && chemin.length > 0) {
+    const [x, y] = centre(chemin[chemin.length - 1]);
+    g.strokeStyle = "rgba(30,242,160,.8)"; g.lineWidth = 3; g.beginPath(); g.arc(x, y, pas * 0.42, 0, 7); g.stroke();
+  }
+  // la célébration : les ampoules clignotent une par une
+  if (fini) {
+    const k = Math.floor((performance.now() - celebration) / 35);
+    chemin.forEach((p, i) => { if (i && i <= k && (i + Math.floor(performance.now() / 160)) % 3 === 0) { const [x, y] = centre(p); halo(g, x, y, pas * 0.5, "#ffffff", "33"); } });
+  }
+  const fait = chemin.length - 1, total = cases.size - 1;
+  $("jauge").style.width = (100 * fait / total) + "%";
+  $("compte").textContent = `${fait} / ${total} ampoules`;
+}
+
+function boucle() {
+  if (!$("ecran-jeu").hidden && (fini || (indiceCase && performance.now() < indiceFin))) dessiner();
+  requestAnimationFrame(boucle);
+}
+requestAnimationFrame(boucle);
+
+// ---------- boutons ----------
+$("b-annuler").onclick = () => { if (!fini && chemin.length > 1) { chemin.pop(); son.retour(); apresCoup(); } };
+$("b-recommencer").onclick = () => { clearInterval(minuteur); lancer(niv.jour); };
+$("b-indice").onclick = () => {
+  if (fini) return;
+  let k = 0;
+  while (k < chemin.length && meme(chemin[k], niv.solution[k])) k++;
+  penalite += 5000; if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); }
+  if (k === chemin.length) { indiceCase = niv.solution[k]; message("La case suivante clignote (+5 s)."); }
+  else { indiceCase = niv.solution[k - 1]; message("Reviens jusqu'à la case qui clignote, puis repars (+5 s)."); }
+  indiceFin = performance.now() + 2600; majChrono();
+};
+function ouvrirRegle() { $("f-regle").hidden = false; $("regle-ok").focus(); }
+$("b-regle").onclick = ouvrirRegle;
+$("regle-ok").onclick = () => { $("f-regle").hidden = true; };
+$("voir-calendrier").onclick = () => montrer("calendrier");
+$("cal-retour").onclick = () => montrer("accueil");
+$("jeu-retour").onclick = () => { clearInterval(minuteur); montrer("calendrier"); };
+window.addEventListener("resize", () => { if (!$("ecran-jeu").hidden) redimensionner(); });
+
+// ---------- victoire et classement de démonstration ----------
+function gagner() {
+  fini = performance.now(); celebration = fini; clearInterval(minuteur); majChrono();
+  const t = tempsEcoule(), ancien = memoire.records[niv.jour];
+  const nouveau = !ancien || t < ancien;
+  if (nouveau) memoire.records[niv.jour] = Math.round(t);
+  if (niv.jour && niv.jour === jourDuJour()) memoire.jourMeme[niv.jour] = true;      // la flamme : fini le jour même
+  ecrire(memoire);
+  vibrer([20, 40, 20]);
+  son.victoire();
+  message("Toute la guirlande est allumée !");
+  setTimeout(() => {
+    $("vic-jour").textContent = niv.jour ? `Jour ${niv.jour} · ${niv.titre}` : "Entraînement";
+    $("vic-temps").textContent = fmt(t);
+    $("vic-detail").textContent = nouveau ? (ancien ? `Nouveau record ! (avant : ${fmt(ancien)})` : "Premier temps enregistré sur cet appareil.") : `Ton record reste ${fmt(ancien)}.`;
+    $("nom").value = memoire.nom || "";
+    $("f-nom").hidden = !!memoire.nom;
+    afficherClassement();
+    const suivant = NIVEAUX.find((n) => n.jour > niv.jour && n.jour > 0 && ouvert(n.jour));
+    $("vic-suivant").hidden = !suivant;
+    if (suivant) $("vic-suivant").onclick = () => { $("f-victoire").hidden = true; lancer(suivant.jour); };
+    $("f-victoire").hidden = false;
+    $("cal-flamme").textContent = $("jeu-flamme").textContent = flamme();
+  }, 1100);
+}
+
+function afficherClassement() {
+  const n = cases.size;
+  const lignes = [
+    { nom: "Lutin Turbo · bot", t: n * 1150, bot: true },
+    { nom: "Lutin Pixel · bot", t: n * 2300, bot: true },
+    { nom: "Lutin Bug · bot", t: n * 3800, bot: true },
+    { nom: (memoire.nom || "Toi") + " (toi)", t: memoire.records[niv.jour], moi: true },
+  ].sort((a, b) => a.t - b.t);
+  $("classement").innerHTML = lignes.map((l, i) =>
+    `<li class="${l.bot ? "bot" : ""} ${l.moi ? "moi" : ""}"><span>${i + 1}</span><span>${l.nom.replace(/[<>&]/g, "")}</span><span>${fmt(l.t)}</span></li>`).join("");
+}
+
+$("f-nom").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = $("nom").value.trim().slice(0, 16);
+  if (!v) return;
+  memoire.nom = v; ecrire(memoire);
+  $("f-nom").hidden = true; afficherClassement();
+});
+$("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; lancer(niv.jour); };
+$("vic-partager").onclick = async () => {
+  const texte = `</Avent> · ${niv.jour ? "jour " + niv.jour : "entraînement"} : guirlande allumée en ${$("vic-temps").textContent}` +
+    (flamme() ? ` · flamme ${flamme()}` : "") + ". Tu fais mieux ?";
+  const url = location.origin + "/avent";
+  try {
+    if (navigator.share) { await navigator.share({ title: "Les guirlandes", text: texte, url }); return; }
+    await navigator.clipboard.writeText(texte + " " + url);
+    $("vic-partager").textContent = "Copié !";
+  } catch (e) { $("vic-partager").textContent = "Copie impossible"; }
+  setTimeout(() => { $("vic-partager").textContent = "Partager"; }, 2000);
+};
+$("vic-calendrier").onclick = () => { $("f-victoire").hidden = true; montrer("calendrier"); };
+
+// ---------- la petite démonstration de l'accueil ----------
+(function demo() {
+  const c = $("demo"), g = c.getContext("2d");
+  const parcours = [[0, 0], [1, 0], [2, 0], [2, 1], [1, 1], [0, 1], [0, 2], [1, 2], [2, 2]];
+  const p = 100, o = 0;
+  let t0 = performance.now();
+  function image(t) {
+    const pas = 100, k = Math.max(1, Math.min(parcours.length, Math.floor((t - t0) / 420) + 1));
+    g.clearRect(0, 0, 300, 300);
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { g.fillStyle = "#16303a"; rr(g, i * pas + 6, j * pas + 6, pas - 12, pas - 12, 16); g.fill(); }
+    const cx = (q) => [q[0] * pas + 50, q[1] * pas + 50];
+    g.strokeStyle = "#3fbf86"; g.lineWidth = 12; g.lineCap = g.lineJoin = "round"; g.beginPath();
+    parcours.slice(0, k).forEach((q, i) => { const [x, y] = cx(q); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+    parcours.forEach((q, i) => {
+      const [x, y] = cx(q);
+      if (i === 0) eclair(g, x, y, 28);
+      else if (i === parcours.length - 1) { if (k === parcours.length) halo(g, x, y, 70, "#ffce5c", "aa"); etoile(g, x, y, 32, k === parcours.length ? "#ffe08a" : "#b8923f"); }
+      else if (i === 2) boule(g, x, y, 26, "tourne", i < k);
+      else if (i === 4) boule(g, x, y, 26, "droit", i < k);
+      else { if (i < k) halo(g, x, y, 46, COULEURS[i % 6], "55"); ampoule(g, x, y, 24, COULEURS[i % 6], i < k, 0.2); }
+    });
+    const [fx, fy] = cx(parcours[k - 1]);
+    if (k < parcours.length) { g.fillStyle = "rgba(220,170,140,.9)"; g.beginPath(); g.arc(fx + 14, fy + 18, 18, 0, 7); g.fill(); }
+    if (t - t0 > parcours.length * 420 + 1600) t0 = t;
+    if (!document.hidden) requestAnimationFrame(image); else setTimeout(() => requestAnimationFrame(image), 500);
+  }
+  requestAnimationFrame(image);
+})();
+
+
+// ---------- le son : une petite musique de Noël composée pour le jeu, et des effets, tout synthétisé ----------
+let audio = null, sortieMusique, sortieEffets;
+let reglageSon = (() => { try { return localStorage.getItem("avent-son") || "tout"; } catch (e) { return "tout"; } })();   // tout, effets, muet
+function audioPret() {
+  if (!audio) {
+    try {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+      const maitre = audio.createGain(); maitre.gain.value = 0.9;
+      const compresseur = audio.createDynamicsCompressor(); compresseur.connect(audio.destination); maitre.connect(compresseur);
+      sortieMusique = audio.createGain(); sortieMusique.connect(maitre);
+      sortieEffets = audio.createGain(); sortieEffets.connect(maitre);
+      appliquerSon();
+    } catch (e) { return false; }
+  }
+  if (audio.state === "suspended") audio.resume();
+  return true;
+}
+function appliquerSon() {
+  if (sortieMusique) sortieMusique.gain.value = reglageSon === "tout" ? 0.16 : 0;
+  if (sortieEffets) sortieEffets.gain.value = reglageSon === "muet" ? 0 : 0.5;
+  const textes = { tout: "Son", effets: "Effets", muet: "Muet" };
+  document.querySelectorAll("[data-son-texte]").forEach((e) => e.textContent = textes[reglageSon]);
+  document.querySelectorAll("[data-onde]").forEach((e) => e.style.opacity = reglageSon === "muet" ? 0 : (reglageSon === "effets" ? 0.4 : 1));
+  document.querySelectorAll("[data-son]").forEach((e) => e.setAttribute("aria-label", `Son : ${textes[reglageSon]} (toucher pour changer)`));
+}
+document.querySelectorAll("[data-son]").forEach((b) => b.addEventListener("click", () => {
+  reglageSon = { tout: "effets", effets: "muet", muet: "tout" }[reglageSon];
+  try { localStorage.setItem("avent-son", reglageSon); } catch (e) {}
+  audioPret(); appliquerSon();
+  if (reglageSon === "tout") musique.demarrer();
+}));
+// le premier toucher, n'importe où, réveille le son (les navigateurs l'exigent)
+window.addEventListener("pointerdown", () => { if (audioPret() && !$("ecran-jeu").hidden) musique.demarrer(); }, { once: true });
+
+function cloche(f, t, duree, volume, sortie) {
+  // une cloche douce, façon célesta : une fondamentale et une harmonique qui s'éteignent vite
+  for (const [mult, v] of [[1, 1], [2.76, 0.28], [5.4, 0.08]]) {
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = "sine"; o.frequency.value = f * mult;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(volume * v, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + duree / mult);
+    o.connect(g); g.connect(sortie); o.start(t); o.stop(t + duree + 0.05);
+  }
+}
+function note(f, t, duree, volume, sortie, type) {
+  const o = audio.createOscillator(), g = audio.createGain(), filtre = audio.createBiquadFilter();
+  o.type = type || "triangle"; o.frequency.value = f; filtre.type = "lowpass"; filtre.frequency.value = 1800;
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(volume, t + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+  o.connect(filtre); filtre.connect(g); g.connect(sortie); o.start(t); o.stop(t + duree + 0.05);
+}
+const hz = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
+const GAMME = [0, 2, 4, 7, 9];          // pentatonique : tout sonne juste ensemble
+
+const son = {
+  pas(avancee, surBoule) {               // chaque ampoule allumée monte d'un cran
+    if (!audioPret() || reglageSon === "muet") return;
+    const i = Math.floor(avancee * 15), m = 72 + 12 * Math.floor(i / 5) + GAMME[i % 5], t = audio.currentTime;
+    cloche(hz(m), t, 0.6, 0.22, sortieEffets);
+    if (surBoule) cloche(hz(m + 12), t + 0.05, 0.4, 0.12, sortieEffets);
+  },
+  retour() { if (!audioPret() || reglageSon === "muet") return; note(hz(60), audio.currentTime, 0.12, 0.12, sortieEffets, "sine"); },
+  erreur() {
+    if (!audioPret() || reglageSon === "muet") return;
+    const t = audio.currentTime; note(hz(50), t, 0.12, 0.14, sortieEffets, "square"); note(hz(47), t + 0.1, 0.18, 0.14, sortieEffets, "square");
+  },
+  victoire() {
+    if (!audioPret() || reglageSon === "muet") return;
+    const t = audio.currentTime;
+    [72, 76, 79, 84, 88, 91, 96].forEach((m, i) => cloche(hz(m), t + i * 0.08, 1.4, 0.2, sortieEffets));
+    for (let k = 0; k < 14; k++) cloche(hz(96 + GAMME[k % 5] + 12 * (k % 2)), t + 0.7 + k * 0.05, 0.5, 0.05, sortieEffets);
+  },
+};
+
+// la musique : 4 accords (do, la mineur, fa, sol), une basse douce et une mélodie de clochettes, en boucle
+const musique = (() => {
+  const accords = [[48, [60, 64, 67]], [45, [57, 60, 64]], [41, [53, 57, 60]], [43, [55, 59, 62]]];
+  const melodie = [76, 79, 81, 79, 76, 74, 72, 74, 76, 72, 69, 72, 74, 76, 74, 72,
+                   72, 76, 77, 76, 74, 72, 69, 72, 71, 74, 79, 77, 76, 74, 72, null];
+  const temps = 60 / 96 / 2;            // une croche à 96 battements par minute
+  let pas = 0, prochain = 0, minuteurMusique = null;
+  function planifier() {
+    while (prochain < audio.currentTime + 0.25) {
+      const mesure = Math.floor(pas / 8) % 4, [basse, accord] = accords[mesure];
+      if (pas % 8 === 0) { note(hz(basse), prochain, temps * 7.5, 0.5, sortieMusique, "sine"); accord.forEach((m) => note(hz(m), prochain, temps * 7.5, 0.1, sortieMusique, "triangle")); }
+      const m = melodie[pas % melodie.length];
+      if (m && pas % 2 === 0) cloche(hz(m), prochain, 0.9, 0.35, sortieMusique);
+      prochain += temps; pas++;
+    }
+  }
+  return {
+    demarrer() {
+      if (!audio || minuteurMusique) return;
+      prochain = audio.currentTime + 0.1;
+      minuteurMusique = setInterval(planifier, 100);
+    },
+  };
+})();
+appliquerSon();
+
+montrer("accueil");
+
+</script>
