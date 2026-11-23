@@ -267,7 +267,9 @@ let memoire = Object.assign({ nom: "", records: {}, jourMeme: {} }, lire());
 // ---------- le calendrier : le jour J s'ouvre le J décembre à minuit, heure de Cotonou (UTC+1) ----------
 const ANNEE = 2026;
 function maintenantCotonou() { return new Date(Date.now() + 3600 * 1000); }      // lu avec getUTC* : l'heure de Cotonou
+const APERCU = location.hash === "#apercu";     // pour tester toutes les grilles avant leur jour (le classement, lui, refusera les temps)
 function jourDuJour() {
+  if (APERCU) return 25;
   const d = maintenantCotonou();
   if (d.getUTCFullYear() > ANNEE) return 25;
   if (d.getUTCFullYear() < ANNEE || d.getUTCMonth() < 11) return 0;
