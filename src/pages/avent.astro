@@ -107,7 +107,7 @@ import '@fontsource/chakra-petch/700.css';
     <div>
       <span class="etiquette">Classement du jour</span>
       <ol class="classement" id="classement"></ol>
-      <p class="pied" style="margin:6px 0 0">Les lutins sont des bots, là pour te donner un temps à battre.</p>
+      <p class="pied" style="margin:6px 0 0" id="note-classement">Les lutins sont les personnages du jeu : ils te donnent un temps à battre.</p>
     </div>
     <div class="deux">
       <button class="btn" id="vic-rejouer">Rejouer</button>
@@ -620,7 +620,7 @@ function gagner() {
     $("vic-detail").textContent = nouveau ? (ancien ? `Nouveau record ! (avant : ${fmt(ancien)})` : "Premier temps enregistré sur cet appareil.") : `Ton record reste ${fmt(ancien)}.`;
     $("nom").value = memoire.nom || "";
     $("f-nom").hidden = !!memoire.nom;
-    afficherClassement();
+    envoyerTemps().then(afficherClassement);
     const suivant = NIVEAUX.find((n) => n.jour > niv.jour && n.jour > 0 && ouvert(n.jour));
     $("vic-suivant").hidden = !suivant;
     if (suivant) $("vic-suivant").onclick = () => { $("f-victoire").hidden = true; lancer(suivant.jour); };
@@ -629,24 +629,70 @@ function gagner() {
   }, 1100);
 }
 
-function afficherClassement() {
-  const n = cases.size;
-  const lignes = [
-    { nom: "Lutin Turbo · bot", t: n * 1150, bot: true },
-    { nom: "Lutin Pixel · bot", t: n * 2300, bot: true },
-    { nom: "Lutin Bug · bot", t: n * 3800, bot: true },
-    { nom: (memoire.nom || "Toi") + " (toi)", t: memoire.records[niv.jour], moi: true },
-  ].sort((a, b) => a.t - b.t);
-  $("classement").innerHTML = lignes.map((l, i) =>
-    `<li class="${l.bot ? "bot" : ""} ${l.moi ? "moi" : ""}"><span>${i + 1}</span><span>${l.nom.replace(/[<>&]/g, "")}</span><span>${fmt(l.t)}</span></li>`).join("");
+// ---------- le classement public (Supabase) : un prénom, un temps, un identifiant d'appareil tiré au hasard ----------
+const API = "https://ujithhyzbfuyabogulzs.supabase.co/rest/v1/rpc/";
+const CLE = "sb_publishable_Xg-8uRQQs9ZqAFgcnnA-8Q_eGzMK9XP";     // clé publique : elle ne donne accès qu'aux deux fonctions du jeu
+function appareil() {
+  if (!memoire.appareil) {
+    memoire.appareil = (crypto.randomUUID ? crypto.randomUUID() : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (Math.random() * 16 >> c / 4)).toString(16)));
+    ecrire(memoire);
+  }
+  return memoire.appareil;
+}
+async function appel(fonction, corps) {
+  const r = await fetch(API + fonction, { method: "POST", headers: { apikey: CLE, "Content-Type": "application/json" }, body: JSON.stringify(corps) });
+  const d = await r.json().catch(() => null);
+  if (!r.ok) throw new Error((d && d.message) || "erreur");
+  return d;
+}
+async function envoyerTemps() {
+  if (!niv.jour || !memoire.nom || !memoire.records[niv.jour]) return;
+  try {
+    await appel("avent_envoyer", { p_jour: niv.jour, p_appareil: appareil(), p_nom: memoire.nom, p_temps_ms: memoire.records[niv.jour] });
+  } catch (e) {
+    if (e.message === "nom refusé") {
+      memoire.nom = ""; ecrire(memoire);
+      $("f-nom").hidden = false; $("nom").value = "";
+      $("nom").placeholder = "Ce prénom n'est pas accepté, choisis-en un autre";
+    }
+  }
+}
+const LUTINS = [["Lutin Turbo", 1150], ["Lutin Pixel", 2300], ["Lutin Bug", 3800]];
+const BONNET = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-1px;margin-right:4px"><path d="M2 13c2-6 5-10 11-9-2 2-3 5-3 9z" fill="#ff5a5f"/><rect x="1" y="12" width="10" height="3" rx="1.5" fill="#f2f2f2"/><circle cx="13.5" cy="4" r="1.8" fill="#f2f2f2"/></svg>';
+const propre = (t) => String(t).replace(/[<>&"]/g, "");
+
+async function afficherClassement() {
+  const liste = $("classement");
+  const lutins = LUTINS.map(([nom, parCase]) => ({ nom, t: cases.size * parCase, lutin: true }));
+  let lignes, joueurs = 0, horsLigne = false;
+  const moi = { nom: (memoire.nom || "Toi") + " (toi)", t: memoire.records[niv.jour], moi: true };
+  if (niv.jour && !APERCU) {
+    try {
+      const d = await appel("avent_classement", { p_jour: niv.jour, p_appareil: appareil() });
+      joueurs = d.length ? Number(d[0].joueurs) : 0;
+      lignes = d.map((l) => ({ nom: l.nom + (l.moi ? " (toi)" : ""), t: l.temps_ms, moi: l.moi, rang: Number(l.rang) }));
+      if (!lignes.some((l) => l.moi) && moi.t) lignes.push(Object.assign(moi, { rang: "–" }));   // pas encore envoyé (pas de prénom…) : on se montre quand même
+    } catch (e) { horsLigne = true; }
+  }
+  if (!lignes) lignes = [moi];
+  // les lutins tiennent compagnie tant qu'il y a moins de 5 vrais joueurs sur la grille
+  if (joueurs < 5) lignes = lignes.concat(lutins).sort((a, b) => a.t - b.t).map((l, i) => Object.assign(l, { rang: i + 1 }));
+  liste.innerHTML = lignes.slice(0, 11).map((l) =>
+    `<li class="${l.lutin ? "bot" : ""} ${l.moi ? "moi" : ""}"><span>${l.rang}</span><span>${l.lutin ? BONNET : ""}${propre(l.nom)}</span><span>${fmt(l.t)}</span></li>`).join("");
+  $("note-classement").textContent = horsLigne ? "Classement indisponible pour le moment (pas de connexion ?) : ton temps est gardé sur ton téléphone."
+    : !niv.jour ? "L'entraînement ne compte pas au classement. Les lutins sont les personnages du jeu : ils te donnent un temps à battre."
+    : APERCU ? "Mode aperçu : les temps ne sont pas envoyés au classement."
+    : (joueurs < 5 ? "Les lutins sont les personnages du jeu : ils te donnent un temps à battre." : `${joueurs} joueurs sur cette grille.`);
 }
 
-$("f-nom").addEventListener("submit", (e) => {
+$("f-nom").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const v = $("nom").value.trim().slice(0, 16);
+  const v = $("nom").value.trim().replace(/\s+/g, " ").slice(0, 16);
   if (!v) return;
   memoire.nom = v; ecrire(memoire);
-  $("f-nom").hidden = true; afficherClassement();
+  $("f-nom").hidden = true;
+  await envoyerTemps();
+  afficherClassement();
 });
 $("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; lancer(niv.jour); };
 $("vic-partager").onclick = async () => {
