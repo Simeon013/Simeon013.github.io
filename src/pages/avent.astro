@@ -31,7 +31,8 @@ import '@fontsource/chakra-petch/700.css';
     <p class="carte" id="ouverture" hidden style="margin:0">Les cases s'ouvrent le <b>1er décembre</b> à minuit, heure de Cotonou. Ouverture dans <span class="compte-rebours" id="rebours"></span>. En attendant, entraîne-toi !</p>
     <button class="btn btn-principal" id="jouer">Jouer</button>
     <button class="btn" id="voir-calendrier">Voir le calendrier</button>
-    <p class="pied">Tes temps et ta flamme restent sur cet appareil : pas de compte. Un jeu imaginé et développé par <a href="/">Siméon Daouda</a>, développeur web et mobile à Cotonou.</p>
+    <button class="lien-avis" data-avis>Donner mon avis sur le jeu</button>
+    <p class="pied">Tes temps et ta flamme restent sur cet appareil : pas de compte. Le jeu compte les parties de façon anonyme (sans aucune donnée personnelle) pour s'améliorer. Un jeu imaginé et développé par <a href="/">Siméon Daouda</a>, développeur web et mobile à Cotonou.</p>
   </section>
 
   <!-- CALENDRIER -->
@@ -42,6 +43,7 @@ import '@fontsource/chakra-petch/700.css';
     </div>
     <h2 style="font-size:28px;color:#fff">Mon Avent</h2>
     <div class="jours" id="jours"></div>
+    <button class="lien-avis" data-avis>Donner mon avis sur le jeu</button>
     <p class="pied">Une case s'ouvre chaque jour à minuit, heure de Cotonou. Les grilles passées restent jouables ; la flamme monte quand tu termines la grille du jour le jour même.</p>
   </section>
 
@@ -92,6 +94,21 @@ import '@fontsource/chakra-petch/700.css';
   </div>
 </div>
 
+
+<!-- AVIS -->
+<div class="voile" id="f-avis" hidden>
+  <form class="fenetre" id="form-avis" role="dialog" aria-modal="true" aria-labelledby="avis-titre">
+    <h3 id="avis-titre">Ton avis</h3>
+    <p style="margin:0;color:var(--doux)">Ce qui te plaît, ce qui coince, une idée : tout m'aide à améliorer le jeu.</p>
+    <div class="notes" role="radiogroup" aria-label="Ta note sur 5">
+      <button type="button" class="note" data-note="1" aria-label="1 sur 5">★</button><button type="button" class="note" data-note="2" aria-label="2 sur 5">★</button><button type="button" class="note" data-note="3" aria-label="3 sur 5">★</button><button type="button" class="note" data-note="4" aria-label="4 sur 5">★</button><button type="button" class="note" data-note="5" aria-label="5 sur 5">★</button>
+    </div>
+    <textarea id="avis-message" maxlength="1000" rows="4" placeholder="Ton message (facultatif)"></textarea>
+    <p class="message" id="avis-etat" role="status" style="text-align:left"></p>
+    <div class="deux"><button type="button" class="btn" id="avis-fermer">Fermer</button><button type="submit" class="btn btn-principal" style="font-size:16px">Envoyer</button></div>
+  </form>
+</div>
+
 <!-- VICTOIRE -->
 <div class="voile" id="f-victoire" hidden>
   <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="vic-titre">
@@ -101,7 +118,7 @@ import '@fontsource/chakra-petch/700.css';
     <span class="badge-indices" id="vic-indices"></span>
     <p style="margin:0;color:var(--doux)" id="vic-detail"></p>
     <form class="nom" id="f-nom">
-      <input id="nom" maxlength="16" placeholder="Ton prénom pour le classement" autocomplete="nickname">
+      <input id="nom" maxlength="16" placeholder="Ton pseudo pour le classement" autocomplete="nickname">
       <button class="btn" type="submit">OK</button>
     </form>
     <div>
@@ -242,6 +259,11 @@ import '@fontsource/chakra-petch/700.css';
 .avent .demo .regles { gap: 4px; font-size: 13px; line-height: 1.35; }
 .avent .fenetre { gap: 10px; padding: 16px; }
 .avent .gros-temps { font-size: 44px; }
+.avent .lien-avis { background: none; border: none; color: var(--doux); text-decoration: underline; text-underline-offset: 3px; padding: 4px 0; align-self: center; font-size: 13px; }
+.avent .notes { display: flex; gap: 6px; }
+.avent .note { font-size: 30px; line-height: 1; background: none; border: none; color: #2c3b38; padding: 2px; }
+.avent .note.on { color: var(--or); }
+.avent textarea { width: 100%; border-radius: 10px; border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); padding: 10px 12px; font: inherit; resize: vertical; }
 .avent .badge-indices { justify-self: start; font-size: 13px; color: var(--doux); border: 1px solid var(--ligne); border-radius: 999px; padding: 3px 10px; }
 .avent .badge-indices.sans { color: var(--or); border-color: var(--or); }
 
@@ -340,14 +362,15 @@ function preparerAccueil() {
 
 // ---------- le jeu ----------
 const cle = (p) => p[0] + "," + p[1];
-let indicesPris = 0;
+let indicesPris = 0, erreurs = 0, retours = 0, debutSignale = false;
 let niv, cases, chemin, debut, fini, penalite, indiceCase, indiceFin, minuteur, taille, pas, ox, oy, glisse = false, dernier = null, celebration = 0;
 
 function lancer(jour) {
   niv = NIVEAUX.find((n) => n.jour === jour);
   cases = new Set(niv.cases.map(cle));
   chemin = [niv.depart];
-  debut = null; fini = false; penalite = 0; indicesPris = 0; indiceCase = null; celebration = 0;
+  signalerAbandon();
+  debut = null; fini = false; penalite = 0; indicesPris = 0; erreurs = 0; retours = 0; debutSignale = false; indiceCase = null; celebration = 0;
   $("jeu-titre").textContent = niv.jour ? `Jour ${niv.jour} · ${niv.titre}` : "Entraînement";
   $("jeu-etoiles").innerHTML = "★".repeat(niv.etoiles) + `<span class="off">${"★".repeat(5 - niv.etoiles)}</span>`;
   $("jeu-etoiles").setAttribute("aria-label", `Difficulté ${niv.etoiles} sur 5`);
@@ -399,20 +422,21 @@ const tourne = (a, b, c) => (a[0] - b[0]) !== (b[0] - c[0]) || (a[1] - b[1]) !==
 function essayer(p) {
   const tete = chemin[chemin.length - 1];
   if (meme(p, tete)) return;
-  if (chemin.length > 1 && meme(p, chemin[chemin.length - 2])) { chemin.pop(); son.retour(); apresCoup(); return; }   // retour en arrière
+  if (chemin.length > 1 && meme(p, chemin[chemin.length - 2])) { chemin.pop(); retours++; son.retour(); apresCoup(); return; }   // retour en arrière
   if (!voisin(p, tete)) return;
   const k = cle(p);
-  if (niv.bloques[k]) { message(niv.bloques[k] === "cadeau" ? "On ne passe pas sur un cadeau." : "On ne passe pas sur un sapin.", true); son.erreur(); return; }
+  if (niv.bloques[k]) { message(niv.bloques[k] === "cadeau" ? "On ne passe pas sur un cadeau." : "On ne passe pas sur un sapin.", true); erreurs++; son.erreur(); return; }
   if (dansChemin(p) >= 0) return;
   if (meme(p, niv.arrivee) && chemin.length !== cases.size - 1) {
-    message(`L'étoile se relie en dernier : il reste ${cases.size - 1 - chemin.length} ampoule(s).`, true); son.erreur(); vibrer(30); return;
+    message(`L'étoile se relie en dernier : il reste ${cases.size - 1 - chemin.length} ampoule(s).`, true); erreurs++; son.erreur(); vibrer(30); return;
   }
   const boule = chemin.length >= 2 && niv.boules[cle(tete)];          // la case qu'on quitte porte-t-elle une boule ?
   if (boule && (boule === "tourne") !== tourne(chemin[chemin.length - 2], tete, p)) {
     message(boule === "tourne" ? "Sur la boule rouge, le fil doit tourner." : "Sur la boule dorée, le fil doit aller tout droit.", true);
-    son.erreur(); vibrer(30); return;
+    erreurs++; son.erreur(); vibrer(30); return;
   }
   if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); }
+  if (!debutSignale) { debutSignale = true; stat("debut", niv.jour, { rejoue: !!memoire.records[niv.jour] }); }
   chemin.push(p);
   indiceCase = null;
   vibrer(8);
@@ -586,6 +610,7 @@ function majIndices() { $("b-indice").innerHTML = 'Indice<br><small style="opaci
 $("b-indice").onclick = () => {
   if (fini) return;
   indicesPris++;
+  stat("indice", niv.jour, { n: indicesPris, avancee: Math.round(100 * (chemin.length - 1) / (cases.size - 1)) });
   let k = 0;
   while (k < chemin.length && meme(chemin[k], niv.solution[k])) k++;
   penalite += 5000; if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); }
@@ -593,12 +618,12 @@ $("b-indice").onclick = () => {
   else { indiceCase = niv.solution[k - 1]; message("Reviens jusqu'à la case qui clignote, puis repars (+5 s)."); }
   indiceFin = performance.now() + 2600; majChrono();
 };
-function ouvrirRegle() { $("f-regle").hidden = false; $("regle-ok").focus(); }
+function ouvrirRegle() { $("f-regle").hidden = false; $("regle-ok").focus(); stat("regle", niv ? niv.jour : null, {}); }
 $("b-regle").onclick = ouvrirRegle;
 $("regle-ok").onclick = () => { $("f-regle").hidden = true; };
 $("voir-calendrier").onclick = () => montrer("calendrier");
 $("cal-retour").onclick = () => montrer("accueil");
-$("jeu-retour").onclick = () => { clearInterval(minuteur); montrer("calendrier"); };
+$("jeu-retour").onclick = () => { clearInterval(minuteur); signalerAbandon(); montrer("calendrier"); };
 window.addEventListener("resize", () => { if (!$("ecran-jeu").hidden) redimensionner(); });
 
 // ---------- victoire et classement de démonstration ----------
@@ -611,6 +636,7 @@ function gagner() {
   ecrire(memoire);
   vibrer([20, 40, 20]);
   son.victoire();
+  stat("victoire", niv.jour, { temps: Math.round(t), indices: indicesPris, erreurs, retours, record: nouveau, jour_meme: niv.jour === jourDuJour(), flamme: flamme() });
   message("Toute la guirlande est allumée !");
   setTimeout(() => {
     $("vic-jour").textContent = niv.jour ? `Jour ${niv.jour} · ${niv.titre}` : "Entraînement";
@@ -629,7 +655,7 @@ function gagner() {
   }, 1100);
 }
 
-// ---------- le classement public (Supabase) : un prénom, un temps, un identifiant d'appareil tiré au hasard ----------
+// ---------- le classement public (Supabase) : un pseudo, un temps, un identifiant d'appareil tiré au hasard ----------
 const API = "https://ujithhyzbfuyabogulzs.supabase.co/rest/v1/rpc/";
 const CLE = "sb_publishable_Xg-8uRQQs9ZqAFgcnnA-8Q_eGzMK9XP";     // clé publique : elle ne donne accès qu'aux deux fonctions du jeu
 function appareil() {
@@ -650,13 +676,54 @@ async function envoyerTemps() {
   try {
     await appel("avent_envoyer", { p_jour: niv.jour, p_appareil: appareil(), p_nom: memoire.nom, p_temps_ms: memoire.records[niv.jour] });
   } catch (e) {
-    if (e.message === "nom refusé") {
+    if (e.message === "nom refusé" || e.message === "nom pris") {
       memoire.nom = ""; ecrire(memoire);
       $("f-nom").hidden = false; $("nom").value = "";
-      $("nom").placeholder = "Ce prénom n'est pas accepté, choisis-en un autre";
+      $("nom").placeholder = e.message === "nom pris" ? "Ce pseudo est déjà pris : choisis-en un autre" : "Ce pseudo n'est pas accepté : choisis-en un autre";
     }
   }
 }
+// statistiques anonymes : un identifiant d'appareil tiré au hasard, le type d'événement, la grille, quelques chiffres
+function stat(type, jour, donnees) {
+  if (APERCU) return;                                // les essais de Siméon ne faussent pas les chiffres
+  try {
+    fetch(API + "avent_evenement", { method: "POST", keepalive: true, headers: { apikey: CLE, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_appareil: appareil(), p_type: type, p_jour: jour ?? null, p_donnees: donnees || {} }) }).catch(() => {});
+  } catch (e) {}
+}
+function signalerAbandon() {
+  // une partie commencée puis quittée sans être finie (retour, onglet fermé, autre grille)
+  if (niv && debutSignale && !fini) {
+    stat("abandon", niv.jour, { avancee: Math.round(100 * (chemin.length - 1) / (cases.size - 1)), temps: Math.round(tempsEcoule()), indices: indicesPris, erreurs });
+    debutSignale = false;
+  }
+}
+addEventListener("pagehide", signalerAbandon);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") signalerAbandon(); });
+
+let noteAvis = 0;
+function ouvrirAvis() {
+  noteAvis = 0; majNotes(); $("avis-message").value = ""; $("avis-etat").textContent = "";
+  $("f-avis").hidden = false; stat("avis_ouvert", niv ? niv.jour : null, {});
+}
+function majNotes() { document.querySelectorAll(".avent .note").forEach((b) => b.classList.toggle("on", Number(b.dataset.note) <= noteAvis)); }
+document.querySelectorAll("[data-avis]").forEach((b) => b.addEventListener("click", ouvrirAvis));
+document.querySelectorAll(".avent .note").forEach((b) => b.addEventListener("click", () => { noteAvis = Number(b.dataset.note); majNotes(); }));
+$("avis-fermer").onclick = () => { $("f-avis").hidden = true; };
+$("form-avis").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const texte = $("avis-message").value.trim();
+  if (!noteAvis && !texte) { $("avis-etat").textContent = "Choisis une note ou écris un petit mot."; return; }
+  try {
+    await appel("avent_donner_avis", { p_appareil: appareil(), p_note: noteAvis || null, p_message: texte,
+      p_contexte: { grille: niv ? niv.jour : null, ecran: `${innerWidth}x${innerHeight}`, records: Object.keys(memoire.records).length } });
+    $("avis-etat").textContent = "Merci, c'est bien reçu !";
+    setTimeout(() => { $("f-avis").hidden = true; }, 1400);
+  } catch (err) {
+    $("avis-etat").textContent = err.message === "trop d'avis" ? "Tu as déjà envoyé plusieurs avis aujourd'hui : merci !" : "Envoi impossible pour le moment (pas de connexion ?).";
+  }
+});
+
 const LUTINS = [["Lutin Turbo", 1150], ["Lutin Pixel", 2300], ["Lutin Bug", 3800]];
 const BONNET = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-1px;margin-right:4px"><path d="M2 13c2-6 5-10 11-9-2 2-3 5-3 9z" fill="#ff5a5f"/><rect x="1" y="12" width="10" height="3" rx="1.5" fill="#f2f2f2"/><circle cx="13.5" cy="4" r="1.8" fill="#f2f2f2"/></svg>';
 const propre = (t) => String(t).replace(/[<>&"]/g, "");
@@ -671,7 +738,7 @@ async function afficherClassement() {
       const d = await appel("avent_classement", { p_jour: niv.jour, p_appareil: appareil() });
       joueurs = d.length ? Number(d[0].joueurs) : 0;
       lignes = d.map((l) => ({ nom: l.nom + (l.moi ? " (toi)" : ""), t: l.temps_ms, moi: l.moi, rang: Number(l.rang) }));
-      if (!lignes.some((l) => l.moi) && moi.t) lignes.push(Object.assign(moi, { rang: "–" }));   // pas encore envoyé (pas de prénom…) : on se montre quand même
+      if (!lignes.some((l) => l.moi) && moi.t) lignes.push(Object.assign(moi, { rang: "–" }));   // pas encore envoyé (pas de pseudo…) : on se montre quand même
     } catch (e) { horsLigne = true; }
   }
   if (!lignes) lignes = [moi];
@@ -689,7 +756,21 @@ $("f-nom").addEventListener("submit", async (e) => {
   e.preventDefault();
   const v = $("nom").value.trim().replace(/\s+/g, " ").slice(0, 16);
   if (!v) return;
-  memoire.nom = v; ecrire(memoire);
+  const bouton = $("f-nom").querySelector("button"); bouton.disabled = true;
+  try {
+    memoire.nom = await appel("avent_choisir_nom", { p_appareil: appareil(), p_nom: v });
+  } catch (err) {
+    bouton.disabled = false;
+    if (err.message === "nom pris" || err.message === "nom refusé") {
+      $("nom").value = "";
+      $("nom").placeholder = err.message === "nom pris" ? "Ce pseudo est déjà pris : choisis-en un autre" : "Ce pseudo n'est pas accepté : choisis-en un autre";
+      $("nom").focus();
+      return;
+    }
+    memoire.nom = v;                                 // pas de connexion : on garde le pseudo, il partira plus tard
+  }
+  bouton.disabled = false;
+  ecrire(memoire);
   $("f-nom").hidden = true;
   await envoyerTemps();
   afficherClassement();
@@ -700,8 +781,9 @@ $("vic-partager").onclick = async () => {
     (flamme() ? ` · flamme ${flamme()}` : "") + ". Tu fais mieux ?";
   const url = location.origin + "/avent";
   try {
-    if (navigator.share) { await navigator.share({ title: "Les guirlandes", text: texte, url }); return; }
+    if (navigator.share) { await navigator.share({ title: "Les guirlandes", text: texte, url }); stat("partage", niv.jour, { methode: "partage" }); return; }
     await navigator.clipboard.writeText(texte + " " + url);
+    stat("partage", niv.jour, { methode: "copie" });
     $("vic-partager").textContent = "Copié !";
   } catch (e) { $("vic-partager").textContent = "Copie impossible"; }
   setTimeout(() => { $("vic-partager").textContent = "Partager"; }, 2000);
@@ -838,5 +920,7 @@ const musique = (() => {
 appliquerSon();
 
 montrer("accueil");
-
+stat("visite", null, { nouveau: !memoire.vu, grille_du_jour: jourDuJour(), ecran: `${innerWidth}x${innerHeight}`,
+  source: document.referrer ? new URL(document.referrer).hostname : "direct", records: Object.keys(memoire.records).length, flamme: flamme() });
+if (!memoire.vu) { memoire.vu = new Date().toISOString().slice(0, 10); ecrire(memoire); }
 </script>
