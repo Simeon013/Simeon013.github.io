@@ -1,0 +1,416 @@
+<title>Admin des guirlandes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Mise en page : un tableau de bord sombre (la DA du jeu), des onglets en haut, une colonne lisible au téléphone.
+   Un seul thème, voulu : celui du jeu. */
+:root {
+  --fond: #050b0e; --surface: #0b1a1e; --surface-2: #10242a; --ligne: #173f33;
+  --vert: #1ef2a0; --violet: #8c6fd8; --or: #ffce5c; --rouge: #ff6b6b;
+  --texte: #d3efe2; --doux: #8fb3a2; --pale: #5e7f70;
+  --titre: "Chakra Petch", "Trebuchet MS", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+body { background: var(--fond); color: var(--texte); font-family: var(--mono); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.page { max-width: 1100px; margin: 0 auto; padding-block: 18px 40px; display: grid; gap: 18px; }
+h1, h2, h3 { font-family: var(--titre); margin: 0; color: #fff; text-wrap: balance; }
+h1 { font-size: 28px; } h2 { font-size: 20px; } h3 { font-size: 16px; }
+button, select { font: inherit; }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--vert); outline-offset: 2px; }
+.entete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.marque { color: var(--vert); font-family: var(--titre); font-weight: 700; }
+.etat { font-size: 12px; color: var(--doux); }
+.onglets { display: flex; flex-wrap: wrap; gap: 6px; }
+.onglet { border: 1px solid var(--ligne); background: var(--surface); color: var(--texte); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.onglet[aria-selected="true"] { background: var(--vert); color: #04150d; border-color: var(--vert); font-weight: 500; }
+.btn { border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); border-radius: 10px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--vert); }
+.btn.danger:hover { border-color: var(--rouge); color: var(--rouge); }
+.carte { background: var(--surface); border: 1px solid var(--ligne); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.tuile { background: var(--surface); border: 1px solid var(--ligne); border-radius: 14px; padding: 12px 14px; display: grid; gap: 2px; }
+.tuile b { font-family: var(--titre); font-size: 28px; color: #fff; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tuile span { color: var(--doux); font-size: 12px; }
+.tuile i { font-style: normal; color: var(--pale); font-size: 11.5px; }
+.deux-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+.tableau { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--ligne); white-space: nowrap; }
+th { color: var(--doux); font-weight: 500; font-size: 12px; }
+td.n, th.n { text-align: right; }
+.vide { color: var(--doux); padding: 14px; border: 1px dashed var(--ligne); border-radius: 12px; }
+.note { color: var(--pale); font-size: 12px; margin: 0; }
+.barres { display: grid; gap: 6px; }
+.barre { display: grid; grid-template-columns: 90px 1fr 48px; gap: 8px; align-items: center; font-size: 12.5px; }
+.barre .fond { height: 10px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.barre .fond i { display: block; height: 100%; background: var(--vert); border-radius: 6px; }
+.graphe { width: 100%; height: 220px; display: block; }
+.legende { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--doux); }
+.legende span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; background: var(--c); vertical-align: -1px; }
+.grilles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.grille { background: var(--surface); border: 1px solid var(--ligne); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
+.grille canvas { width: 100%; aspect-ratio: 1; border-radius: 10px; background: var(--surface-2); }
+.grille .titre { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.grille .titre b { font-family: var(--titre); color: #fff; }
+.grille .chiffres { font-size: 12px; color: var(--doux); display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-variant-numeric: tabular-nums; }
+.pill { font-size: 11.5px; border-radius: 999px; padding: 2px 8px; border: 1px solid var(--ligne); color: var(--doux); white-space: nowrap; }
+.pill.ok { color: var(--vert); border-color: var(--vert); }
+.pill.alerte { color: var(--rouge); border-color: var(--rouge); }
+.pill.or { color: var(--or); border-color: var(--or); }
+.avis { display: grid; gap: 10px; }
+.un-avis { background: var(--surface); border: 1px solid var(--ligne); border-radius: 12px; padding: 12px; display: grid; gap: 6px; }
+.un-avis.nonlu { border-color: var(--or); }
+.un-avis p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.etoiles { color: var(--or); letter-spacing: 2px; }
+.rangee { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.confirmer { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--rouge); }
+.toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--ligne); border-radius: 10px; padding: 8px 14px; z-index: 5; max-width: calc(100% - 32px); }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+  <div class="entete">
+    <div><span class="marque">&lt;/Avent&gt;</span> <h1 style="display:inline">Admin des guirlandes</h1></div>
+    <div style="display:flex;gap:10px;align-items:center"><span class="etat" id="etat">Connexion à Supabase…</span><button class="btn" id="actualiser">Actualiser</button></div>
+  </div>
+  <div class="onglets" role="tablist">
+    <button class="onglet" role="tab" data-onglet="ensemble" aria-selected="true">Vue d'ensemble</button>
+    <button class="onglet" role="tab" data-onglet="retention">Rétention</button>
+    <button class="onglet" role="tab" data-onglet="grilles">Les 24 grilles</button>
+    <button class="onglet" role="tab" data-onglet="classement">Classement</button>
+    <button class="onglet" role="tab" data-onglet="avis">Avis <span id="badge-avis"></span></button>
+  </div>
+
+  <!-- VUE D'ENSEMBLE -->
+  <section data-vue="ensemble" class="page" style="padding:0">
+    <div class="tuiles" id="tuiles"></div>
+    <div class="carte">
+      <div class="rangee"><h2>Jour après jour</h2><div class="legende"><span style="--c:#5e7f70">visiteurs</span><span style="--c:#8c6fd8">joueurs</span><span style="--c:#1ef2a0">ont fini une grille</span></div></div>
+      <svg class="graphe" id="graphe" role="img" aria-label="Visiteurs, joueurs et finisseurs par jour"></svg>
+      <div class="tableau"><table id="t-jours"></table></div>
+    </div>
+    <div class="deux-col">
+      <div class="carte"><h2>D'où ils viennent</h2><div class="barres" id="sources"></div><p class="note">Le site d'où vient le visiteur (Threads, Instagram, LinkedIn…) ; « direct » : lien ouvert depuis une appli qui ne le dit pas.</p></div>
+      <div class="carte"><h2>Comportement en partie</h2><div class="barres" id="comportement"></div></div>
+    </div>
+  </section>
+
+  <!-- RÉTENTION -->
+  <section data-vue="retention" class="page" style="padding:0" hidden>
+    <div class="carte">
+      <h2>Ils reviennent ?</h2>
+      <p class="note">Chaque ligne : les appareils venus pour la première fois ce jour-là, et la part revenue jouer au moins une fois ensuite (1, 3 et 7 jours plus tard ou après). Un « appareil » = un téléphone ou un navigateur : pas de compte.</p>
+      <div class="tableau"><table id="t-cohortes"></table></div>
+    </div>
+    <div class="deux-col">
+      <div class="carte"><h2>Combien de grilles chacun a fini</h2><div class="barres" id="assiduite"></div></div>
+      <div class="carte"><h2>Flammes</h2><div class="barres" id="flammes"></div><p class="note">La plus longue série (jours d'affilée, grille finie le jour même) atteinte par chaque appareil.</p></div>
+    </div>
+  </section>
+
+  <!-- GRILLES -->
+  <section data-vue="grilles" class="page" style="padding:0" hidden>
+    <div class="rangee"><p class="note" style="margin:0">Les 25 grilles du jeu (0 = entraînement), avec leurs chiffres. Toutes ont une seule solution, vérifiée à la création.</p>
+      <label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="voir-solutions"> Montrer les solutions</label></div>
+    <div class="grilles" id="grilles"></div>
+  </section>
+
+  <!-- CLASSEMENT -->
+  <section data-vue="classement" class="page" style="padding:0" hidden>
+    <div class="carte">
+      <div class="rangee"><h2>Classement d'une grille</h2>
+        <label class="note" style="display:flex;gap:6px;align-items:center">Grille <select id="choix-jour"></select></label></div>
+      <div class="tableau"><table id="t-classement"></table></div>
+      <p class="note">« Retirer » efface ce score. « Bannir le pseudo » efface le pseudo et tous les scores de cet appareil (il devra en choisir un autre).</p>
+    </div>
+    <div class="carte"><h2>Les pseudos</h2><div class="tableau"><table id="t-joueurs"></table></div></div>
+  </section>
+
+  <!-- AVIS -->
+  <section data-vue="avis" class="page" style="padding:0" hidden>
+    <div class="tuiles" id="tuiles-avis"></div>
+    <div class="avis" id="liste-avis"></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const NIVEAUX = __NIVEAUX__;
+const PROJET = "ujithhyzbfuyabogulzs";
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, enfants = []) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) { if (k === "text") e.textContent = v; else if (k === "class") e.className = v; else e.setAttribute(k, v); }
+  for (const c of [].concat(enfants)) if (c != null) e.append(c);
+  return e;
+};
+const fmt = (ms) => { if (ms == null || isNaN(ms)) return "—"; const s = Math.round(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const pct = (a, b) => b ? Math.round(100 * a / b) + " %" : "—";
+const n = (v) => Number(v || 0);
+function toast(t) { const e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.m); toast.m = setTimeout(() => e.hidden = true, 3500); }
+
+// ---------- Supabase, par ton connecteur (tes droits, aucun jeton dans la page) ----------
+let promesseMcp = null;
+const mcp = () => promesseMcp ??= (window.claude?.use ? window.claude.use("mcp").catch(() => null) : Promise.resolve(null));
+function lignes(res) {
+  const p = res?.payload;
+  const txt = typeof p === "string" ? p : (p && typeof p.result === "string" ? p.result : (res?.content?.[0]?.text || ""));
+  const debut = txt.indexOf("["), fin = txt.lastIndexOf("]");
+  try { return debut >= 0 && fin > debut ? JSON.parse(txt.slice(debut, fin + 1)) : []; } catch (e) { return []; }
+}
+function messageErreur(e) {
+  switch (e?.code) {
+    case "server_not_connected": return "Supabase n'est pas branché : ajoute-le dans claude.ai › Paramètres › Connecteurs.";
+    case "needs_reauth": return "Ta connexion Supabase a expiré : reconnecte-la dans claude.ai › Paramètres › Connecteurs.";
+    case "not_in_manifest": return "Tu n'as pas autorisé Supabase pour cette page : recharge-la et accepte la demande.";
+    case "tool_error": return "Supabase a refusé la requête : " + (e.message || "");
+    default: return "Supabase ne répond pas pour le moment.";
+  }
+}
+async function sql(query) {
+  const m = await mcp();
+  if (!m) throw { code: "absent" };
+  return lignes(await m.callTool("Supabase", "execute_sql", { project_id: PROJET, query }));
+}
+const lit = (v) => "'" + String(v ?? "").replace(/'/g, "''") + "'";
+const uuid = (v) => /^[0-9a-f-]{36}$/i.test(v) ? lit(v) + "::uuid" : "null";
+const DATE = "((cree at time zone 'Africa/Porto-Novo')::date)";
+
+// ---------- onglets ----------
+document.querySelectorAll("[data-onglet]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-onglet]").forEach((x) => x.setAttribute("aria-selected", x === b ? "true" : "false"));
+  document.querySelectorAll("[data-vue]").forEach((v) => v.hidden = v.dataset.vue !== b.dataset.onglet);
+  try { localStorage.setItem("admin-onglet", b.dataset.onglet); } catch (e) {}
+}));
+try { const o = localStorage.getItem("admin-onglet"); if (o) document.querySelector(`[data-onglet="${o}"]`)?.click(); } catch (e) {}
+
+// ---------- chargement ----------
+async function charger() {
+  $("etat").textContent = "Chargement…";
+  try {
+    const [tot, jours, sources, compo, cohortes, assid, flammes, grilles, joueurs, avis] = await Promise.all([
+      sql(`select count(distinct appareil) filter (where type='visite') visiteurs,
+             count(distinct appareil) filter (where type='debut') joueurs,
+             count(distinct appareil) filter (where type='victoire') finisseurs,
+             count(*) filter (where type='debut') parties, count(*) filter (where type='victoire') victoires,
+             count(*) filter (where type='abandon') abandons, count(*) filter (where type='indice') indices,
+             count(*) filter (where type='partage') partages, count(*) filter (where type='visite') visites,
+             count(distinct appareil) filter (where type='visite' and ${DATE} = (now() at time zone 'Africa/Porto-Novo')::date) visiteurs_auj,
+             count(distinct appareil) filter (where type='debut' and ${DATE} = (now() at time zone 'Africa/Porto-Novo')::date) joueurs_auj,
+             (select count(*) from public.avent_joueurs) pseudos
+           from public.avent_evenements`),
+      sql(`select ${DATE} d, count(distinct appareil) filter (where type='visite') visiteurs,
+             count(distinct appareil) filter (where type='debut') joueurs, count(distinct appareil) filter (where type='victoire') finisseurs,
+             count(*) filter (where type='victoire') victoires, count(*) filter (where type='abandon') abandons, count(*) filter (where type='partage') partages
+           from public.avent_evenements group by 1 order by 1`),
+      sql(`select coalesce(donnees->>'source','direct') source, count(distinct appareil) n from public.avent_evenements where type='visite' group by 1 order by 2 desc limit 8`),
+      sql(`select round(avg((donnees->>'indices')::numeric) filter (where type='victoire'),2) indices_moy,
+             round(avg((donnees->>'erreurs')::numeric) filter (where type='victoire'),1) erreurs_moy,
+             round(avg((donnees->>'retours')::numeric) filter (where type='victoire'),1) retours_moy,
+             count(*) filter (where type='victoire' and (donnees->>'indices')::int = 0) sans_indice,
+             count(*) filter (where type='victoire') victoires,
+             round(avg((donnees->>'avancee')::numeric) filter (where type='abandon')) avancee_abandon,
+             count(*) filter (where type='regle') regles, count(*) filter (where type='avis_ouvert') avis_ouverts
+           from public.avent_evenements`),
+      sql(`with jours as (select appareil, ${DATE} d from public.avent_evenements group by 1,2),
+             premier as (select appareil, min(d) d0 from jours group by 1)
+           select p.d0, count(distinct p.appareil) taille,
+             count(distinct p.appareil) filter (where j.d >= p.d0 + 1) j1,
+             count(distinct p.appareil) filter (where j.d >= p.d0 + 3) j3,
+             count(distinct p.appareil) filter (where j.d >= p.d0 + 7) j7
+           from premier p left join jours j on j.appareil = p.appareil group by 1 order by 1`),
+      sql(`select nb, count(*) appareils from (select appareil, count(distinct jour) nb from public.avent_evenements where type='victoire' and jour > 0 group by 1) t group by 1 order by 1`),
+      sql(`select f, count(*) appareils from (select appareil, max((donnees->>'flamme')::int) f from public.avent_evenements where type='victoire' group by 1) t where f > 0 group by 1 order by 1`),
+      sql(`select jour, count(*) filter (where type='debut') debuts, count(*) filter (where type='victoire') victoires,
+             count(*) filter (where type='abandon') abandons, count(distinct appareil) filter (where type='victoire') finisseurs,
+             percentile_cont(0.5) within group (order by (donnees->>'temps')::int) filter (where type='victoire') mediane,
+             min((donnees->>'temps')::int) filter (where type='victoire') meilleur,
+             round(avg((donnees->>'indices')::numeric) filter (where type='victoire'),1) indices,
+             round(avg((donnees->>'erreurs')::numeric) filter (where type='victoire'),1) erreurs,
+             round(avg((donnees->>'avancee')::numeric) filter (where type='abandon')) avancee
+           from public.avent_evenements where jour is not null group by 1`),
+      sql(`select j.nom, j.appareil, j.cree, count(s.jour) grilles, min(s.temps_ms) meilleur from public.avent_joueurs j
+           left join public.avent_scores s on s.appareil = j.appareil group by 1,2,3 order by grilles desc, j.cree limit 200`),
+      sql(`select id, nom, note, message, contexte, lu, cree from public.avent_avis order by cree desc limit 200`),
+    ]);
+    afficherEnsemble(tot[0] || {}, jours, sources, compo[0] || {});
+    afficherRetention(cohortes, assid, flammes);
+    afficherGrilles(grilles);
+    afficherJoueurs(joueurs);
+    afficherAvis(avis);
+    await chargerClassement();
+    $("etat").textContent = "À jour : " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  } catch (e) {
+    $("etat").textContent = e?.code === "absent" ? "Ouvre cette page sur claude.ai, avec ton connecteur Supabase." : messageErreur(e);
+  }
+}
+$("actualiser").onclick = charger;
+
+// ---------- vue d'ensemble ----------
+function tuile(valeur, libelle, detail) { return el("div", { class: "tuile" }, [el("b", { text: valeur }), el("span", { text: libelle }), detail ? el("i", { text: detail }) : null]); }
+function afficherEnsemble(t, jours, sources, c) {
+  $("tuiles").replaceChildren(
+    tuile(n(t.visiteurs), "visiteurs (appareils)", `${n(t.visiteurs_auj)} aujourd'hui`),
+    tuile(n(t.joueurs), "ont commencé une grille", `${pct(t.joueurs, t.visiteurs)} des visiteurs · ${n(t.joueurs_auj)} aujourd'hui`),
+    tuile(n(t.finisseurs), "ont fini au moins une grille", pct(t.finisseurs, t.joueurs) + " des joueurs"),
+    tuile(n(t.victoires), "grilles terminées", `sur ${n(t.parties)} parties commencées`),
+    tuile(n(t.abandons), "abandons", pct(t.abandons, t.parties) + " des parties"),
+    tuile(n(t.pseudos), "pseudos au classement"),
+    tuile(n(t.partages), "partages"),
+    tuile(n(t.indices), "indices demandés"),
+  );
+  // le graphique : trois courbes sur la même échelle
+  const svg = $("graphe"); svg.replaceChildren();
+  const W = svg.clientWidth || 800, H = 220, m = { g: 34, d: 8, h: 10, b: 24 };
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const NS = "http://www.w3.org/2000/svg", mk = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  if (!jours.length) { const tx = mk("text", { x: W / 2, y: H / 2, "text-anchor": "middle", fill: "#8fb3a2", "font-size": 13 }); tx.textContent = "Pas encore de données : elles arrivent dès les premières visites."; svg.append(tx); }
+  else {
+    const max = Math.max(1, ...jours.map((j) => n(j.visiteurs)));
+    const pasY = max <= 5 ? 1 : Math.ceil(max / 4);
+    const x = (i) => m.g + (jours.length === 1 ? (W - m.g - m.d) / 2 : i * (W - m.g - m.d) / (jours.length - 1));
+    const y = (v) => H - m.b - (H - m.b - m.h) * v / (Math.ceil(max / pasY) * pasY);
+    for (let v = 0; v <= Math.ceil(max / pasY) * pasY; v += pasY) {
+      svg.append(mk("line", { x1: m.g, x2: W - m.d, y1: y(v), y2: y(v), stroke: "#173f33" }));
+      const tx = mk("text", { x: m.g - 6, y: y(v) + 4, "text-anchor": "end", fill: "#5e7f70", "font-size": 11 }); tx.textContent = v; svg.append(tx);
+    }
+    for (const [cle, coul] of [["visiteurs", "#5e7f70"], ["joueurs", "#8c6fd8"], ["finisseurs", "#1ef2a0"]]) {
+      svg.append(mk("polyline", { points: jours.map((j, i) => `${x(i)},${y(n(j[cle]))}`).join(" "), fill: "none", stroke: coul, "stroke-width": 2, "stroke-linejoin": "round" }));
+      jours.forEach((j, i) => svg.append(mk("circle", { cx: x(i), cy: y(n(j[cle])), r: 3.5, fill: coul })));
+    }
+    const pasX = Math.max(1, Math.ceil(jours.length / 10));
+    jours.forEach((j, i) => { if (i % pasX === 0) { const tx = mk("text", { x: x(i), y: H - 6, "text-anchor": "middle", fill: "#5e7f70", "font-size": 11 }); tx.textContent = String(j.d).slice(5).split("-").reverse().join("/"); svg.append(tx); } });
+  }
+  $("t-jours").replaceChildren(el("tr", {}, ["Date", "Visiteurs", "Joueurs", "Ont fini", "Grilles finies", "Abandons", "Partages"].map((h, i) => el("th", { class: i ? "n" : "", text: h }))),
+    ...jours.slice().reverse().map((j) => el("tr", {}, [el("td", { text: String(j.d).split("-").reverse().join("/") }),
+      ...["visiteurs", "joueurs", "finisseurs", "victoires", "abandons", "partages"].map((k) => el("td", { class: "n", text: n(j[k]) }))])));
+  barres($("sources"), sources.map((s) => [s.source, n(s.n)]), "Pas encore de visite.");
+  barres($("comportement"), [
+    ["indices", c.indices_moy ?? "—", "par grille finie (moyenne)"], ["erreurs", c.erreurs_moy ?? "—", "mouvements refusés par grille finie"],
+    ["retours", c.retours_moy ?? "—", "pas en arrière par grille finie"], ["sans indice", pct(c.sans_indice, c.victoires), "des grilles finies"],
+    ["abandon à", c.avancee_abandon != null ? c.avancee_abandon + " %" : "—", "de la grille, en moyenne"],
+    ["règle lue", n(c.regles), "fois"], ["avis ouverts", n(c.avis_ouverts), "fois"],
+  ].map(([a, b, d]) => [a, b, d]), "", true);
+}
+function barres(boite, data, videTexte, texte) {
+  if (!data.length) { boite.replaceChildren(el("p", { class: "vide", text: videTexte })); return; }
+  const max = Math.max(1, ...data.map((d) => Number(d[1]) || 0));
+  boite.replaceChildren(...data.map(([nom, v, detail]) => texte
+    ? el("div", { class: "barre", style: "grid-template-columns:110px 1fr" }, [el("span", { text: nom }), el("span", {}, [el("b", { text: String(v) + " " }), el("span", { class: "note", text: detail })])])
+    : el("div", { class: "barre" }, [el("span", { text: nom }), el("div", { class: "fond" }, el("i", { style: `width:${100 * v / max}%` })), el("span", { class: "n", text: v, style: "text-align:right" })])));
+}
+
+// ---------- rétention ----------
+function afficherRetention(coh, assid, flammes) {
+  $("t-cohortes").replaceChildren(el("tr", {}, ["Première visite", "Appareils", "Revenus après 1 j", "après 3 j", "après 7 j"].map((h, i) => el("th", { class: i ? "n" : "", text: h }))),
+    ...(coh.length ? coh.slice().reverse().map((c) => el("tr", {}, [el("td", { text: String(c.d0).split("-").reverse().join("/") }), el("td", { class: "n", text: n(c.taille) }),
+      el("td", { class: "n", text: pct(c.j1, c.taille) }), el("td", { class: "n", text: pct(c.j3, c.taille) }), el("td", { class: "n", text: pct(c.j7, c.taille) })]))
+      : [el("tr", {}, el("td", { colspan: 5, class: "vide", text: "Pas encore de visiteurs." }))]));
+  barres($("assiduite"), assid.map((a) => [`${a.nb} grille${a.nb > 1 ? "s" : ""}`, n(a.appareils)]), "Personne n'a encore fini de grille.");
+  barres($("flammes"), flammes.map((f) => [`flamme ${f.f}`, n(f.appareils)]), "Pas encore de flamme.");
+}
+
+// ---------- les 24 grilles ----------
+const COUL = { tourne: "#ff5a5f", droit: "#ffce5c" };
+function dessinerGrille(c, niv, solution) {
+  const r = c.getBoundingClientRect(), dpr = devicePixelRatio || 1, T = r.width || 220;
+  c.width = T * dpr; c.height = T * dpr;
+  const g = c.getContext("2d"); g.scale(dpr, dpr);
+  const pas = (T * 0.92) / Math.max(niv.w, niv.h), ox = (T - pas * niv.w) / 2, oy = (T - pas * niv.h) / 2;
+  const ctr = (p) => [ox + (p[0] + .5) * pas, oy + (p[1] + .5) * pas];
+  for (const [x, y] of niv.cases) { g.fillStyle = "#16303a"; g.fillRect(ox + x * pas + 1.5, oy + y * pas + 1.5, pas - 3, pas - 3); }
+  for (const k of Object.keys(niv.bloques)) { const [x, y] = k.split(",").map(Number); g.fillStyle = niv.bloques[k] === "cadeau" ? "#8c6fd8" : "#1a8f5c"; g.fillRect(ox + x * pas + pas * .25, oy + y * pas + pas * .25, pas * .5, pas * .5); }
+  if (solution) { g.strokeStyle = "#3fbf86"; g.lineWidth = Math.max(2, pas * .12); g.lineJoin = g.lineCap = "round"; g.beginPath(); niv.solution.forEach((p, i) => { const [x, y] = ctr(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); }
+  for (const [k, s] of Object.entries(niv.boules)) { const [x, y] = ctr(k.split(",").map(Number)); g.fillStyle = COUL[s]; g.beginPath(); g.arc(x, y, pas * .26, 0, 7); g.fill(); }
+  const [dx, dy] = ctr(niv.depart); g.fillStyle = "#ffce5c"; g.beginPath(); g.arc(dx, dy, pas * .32, 0, 7); g.fill();
+  g.fillStyle = "#3a2405"; g.beginPath(); [[.15,-.75],[-.4,.1],[-.02,.1],[-.2,.75],[.42,-.15],[.04,-.15]].forEach(([a,b],i) => { const X = dx + a * pas * .3, Y = dy + b * pas * .3; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.fill();
+  const [ax, ay] = ctr(niv.arrivee); g.fillStyle = "#ffe08a"; g.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? pas * .15 : pas * .34; g.lineTo(ax + rr * Math.cos(a), ay + rr * Math.sin(a)); } g.fill();
+}
+let statsGrilles = [];
+function afficherGrilles(stats) {
+  statsGrilles = stats;
+  const voir = $("voir-solutions").checked;
+  $("grilles").replaceChildren(...NIVEAUX.map((niv) => {
+    const s = stats.find((x) => n(x.jour) === niv.jour) || {};
+    const debuts = n(s.debuts), taux = debuts ? n(s.victoires) / debuts : null;
+    const pill = debuts < 3 ? el("span", { class: "pill", text: "peu de parties" }) : taux >= .6 ? el("span", { class: "pill ok", text: "réussie " + pct(s.victoires, debuts) }) : taux >= .3 ? el("span", { class: "pill or", text: "difficile " + pct(s.victoires, debuts) }) : el("span", { class: "pill alerte", text: "trop dure ? " + pct(s.victoires, debuts) });
+    const c = el("canvas", { "aria-label": `Grille du jour ${niv.jour}` });
+    const carte = el("div", { class: "grille" }, [
+      el("div", { class: "titre" }, [el("b", { text: niv.jour ? `Jour ${niv.jour}` : "Entraînement" }), el("span", { class: "pill", text: "★".repeat(niv.etoiles) })]),
+      el("span", { class: "note", text: `${niv.titre} · ${niv.w}×${niv.h} · ${Object.keys(niv.boules).length} boules · ${Object.keys(niv.bloques).length} cases interdites` }),
+      c, pill,
+      el("div", { class: "chiffres" }, [
+        el("span", { text: `parties : ${debuts}` }), el("span", { text: `finies : ${n(s.victoires)}` }),
+        el("span", { text: `abandons : ${n(s.abandons)}` }), el("span", { text: `joueurs : ${n(s.finisseurs)}` }),
+        el("span", { text: `médiane : ${fmt(s.mediane)}` }), el("span", { text: `meilleur : ${fmt(s.meilleur)}` }),
+        el("span", { text: `indices : ${s.indices ?? "—"}` }), el("span", { text: `erreurs : ${s.erreurs ?? "—"}` }),
+        el("span", { text: `abandon à : ${s.avancee != null ? s.avancee + " %" : "—"}` }),
+      ]),
+    ]);
+    requestAnimationFrame(() => dessinerGrille(c, niv, voir));
+    return carte;
+  }));
+}
+$("voir-solutions").onchange = () => afficherGrilles(statsGrilles);
+afficherGrilles([]);
+
+// ---------- classement et modération ----------
+$("choix-jour").replaceChildren(...NIVEAUX.filter((x) => x.jour).map((x) => el("option", { value: x.jour, text: `Jour ${x.jour}` })));
+$("choix-jour").onchange = chargerClassement;
+function boutonConfirme(libelle, question, action) {
+  const b = el("button", { class: "btn danger", text: libelle });
+  b.onclick = () => {
+    const oui = el("button", { class: "btn danger", text: "Oui" }), non = el("button", { class: "btn", text: "Non" });
+    const zone = el("span", { class: "confirmer" }, [question, oui, non]);
+    b.replaceWith(zone);
+    non.onclick = () => zone.replaceWith(b);
+    oui.onclick = async () => { oui.disabled = true; try { await action(); toast("Fait."); await charger(); } catch (e) { toast(messageErreur(e)); zone.replaceWith(b); } };
+  };
+  return b;
+}
+async function chargerClassement() {
+  const jour = Number($("choix-jour").value || 1);
+  let rang;
+  try { rang = await sql(`select nom, temps_ms, appareil, maj from public.avent_scores where jour = ${jour} order by temps_ms, maj limit 100`); }
+  catch (e) { return; }
+  $("t-classement").replaceChildren(el("tr", {}, ["#", "Pseudo", "Temps", "Le", ""].map((h) => el("th", { text: h }))),
+    ...(rang.length ? rang.map((r, i) => el("tr", {}, [el("td", { text: i + 1 }), el("td", { text: r.nom }), el("td", { text: fmt(r.temps_ms) }),
+      el("td", { text: new Date(r.maj).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) }),
+      el("td", {}, boutonConfirme("Retirer", "Effacer ce score ?", () => sql(`delete from public.avent_scores where jour = ${jour} and appareil = ${uuid(r.appareil)}`)))]))
+      : [el("tr", {}, el("td", { colspan: 5, class: "vide", text: "Personne au classement de cette grille pour l'instant." }))]));
+}
+function afficherJoueurs(j) {
+  $("t-joueurs").replaceChildren(el("tr", {}, ["Pseudo", "Inscrit le", "Grilles classées", "Meilleur temps", ""].map((h) => el("th", { text: h }))),
+    ...(j.length ? j.map((r) => el("tr", {}, [el("td", { text: r.nom }), el("td", { text: new Date(r.cree).toLocaleDateString("fr-FR") }), el("td", { class: "n", text: n(r.grilles) }), el("td", { text: fmt(r.meilleur) }),
+      el("td", {}, boutonConfirme("Bannir le pseudo", "Effacer ce pseudo et ses scores ?", () => sql(`delete from public.avent_scores where appareil = ${uuid(r.appareil)}; delete from public.avent_joueurs where appareil = ${uuid(r.appareil)};`)))]))
+      : [el("tr", {}, el("td", { colspan: 5, class: "vide", text: "Aucun pseudo pour l'instant." }))]));
+}
+
+// ---------- avis ----------
+function afficherAvis(avis) {
+  const notes = avis.filter((a) => a.note), moy = notes.length ? (notes.reduce((s, a) => s + n(a.note), 0) / notes.length).toFixed(1) : "—";
+  const nonlus = avis.filter((a) => !a.lu).length;
+  $("badge-avis").textContent = nonlus ? `(${nonlus})` : "";
+  $("tuiles-avis").replaceChildren(tuile(avis.length, "avis reçus"), tuile(moy, "note moyenne sur 5", `${notes.length} notes`), tuile(nonlus, "non lus"));
+  $("liste-avis").replaceChildren(...(avis.length ? avis.map((a) => {
+    const lu = el("button", { class: "btn", text: a.lu ? "Marquer non lu" : "Marquer lu" });
+    lu.onclick = async () => { try { await sql(`update public.avent_avis set lu = ${a.lu ? "false" : "true"} where id = ${Number(a.id)}`); await charger(); } catch (e) { toast(messageErreur(e)); } };
+    const ctx = a.contexte || {};
+    return el("div", { class: "un-avis" + (a.lu ? "" : " nonlu") }, [
+      el("div", { class: "rangee" }, [el("span", {}, [el("span", { class: "etoiles", text: a.note ? "★".repeat(a.note) + "☆".repeat(5 - a.note) : "" }), " ", el("b", { text: a.nom || "anonyme" })]),
+        el("span", { class: "note", text: new Date(a.cree).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) })]),
+      a.message ? el("p", { text: a.message }) : null,
+      el("span", { class: "note", text: [ctx.grille != null ? `grille ${ctx.grille}` : "", ctx.ecran ? `écran ${ctx.ecran}` : "", ctx.records != null ? `${ctx.records} grilles finies` : ""].filter(Boolean).join(" · ") }),
+      el("div", { style: "display:flex;gap:8px" }, [lu, boutonConfirme("Supprimer", "Supprimer cet avis ?", () => sql(`delete from public.avent_avis where id = ${Number(a.id)}`))]),
+    ]);
+  }) : [el("p", { class: "vide", text: "Pas encore d'avis : le bouton « Donner mon avis » est sur l'accueil et le calendrier du jeu." })]));
+}
+
+charger();
+</script>
