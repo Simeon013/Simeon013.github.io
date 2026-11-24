@@ -31,6 +31,7 @@ import '@fontsource/chakra-petch/700.css';
     <p class="carte" id="ouverture" hidden style="margin:0">Les cases s'ouvrent le <b>1er décembre</b> à minuit, heure de Cotonou. Ouverture dans <span class="compte-rebours" id="rebours"></span>. En attendant, entraîne-toi !</p>
     <button class="btn btn-principal" id="jouer">Jouer</button>
     <button class="btn" id="voir-calendrier">Voir le calendrier</button>
+    <button class="lien-avis" data-infos>Règles et infos</button>
     <button class="lien-avis" data-avis>Donner mon avis sur le jeu</button>
     <p class="pied">Tes temps et ta flamme restent sur cet appareil : pas de compte. Le jeu compte les parties de façon anonyme (sans aucune donnée personnelle) pour s'améliorer. Un jeu imaginé et développé par <a href="/">Siméon Daouda</a>, développeur web et mobile à Cotonou.</p>
   </section>
@@ -49,6 +50,7 @@ import '@fontsource/chakra-petch/700.css';
       <ol class="classement" id="classement-general"></ol>
     </div>
     <button class="btn" id="cal-entrainement">S'entraîner</button>
+    <button class="lien-avis" data-infos>Règles et infos</button>
     <button class="lien-avis" data-avis>Donner mon avis sur le jeu</button>
     <p class="pied">Une case s'ouvre chaque jour à minuit, heure de Cotonou. Les grilles passées restent jouables ; la flamme monte quand tu termines la grille du jour le jour même.</p>
   </section>
@@ -83,6 +85,20 @@ import '@fontsource/chakra-petch/700.css';
   </section>
 </div>
 
+<!-- DÉPART D'UNE GRILLE DU JOUR -->
+<div class="voile" id="f-depart" hidden>
+  <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="dep-titre">
+    <span class="etiquette" id="dep-detail"></span>
+    <h3 id="dep-titre">Jour 1</h3>
+    <ul class="regles">
+      <li><span class="n">⏱</span><span>Le chrono démarre dès que tu appuies sur <b>Commencer</b>, et il ne s'arrête plus : même si tu recommences ou que tu quittes la grille.</span></li>
+      <li><span class="n">1</span><span>Seul ton <b>premier essai</b> compte au classement. Ensuite, tu peux rejouer pour le plaisir.</span></li>
+    </ul>
+    <p class="message" id="dep-etat" role="status" style="text-align:left"></p>
+    <div class="deux"><button class="btn" id="dep-annuler">Pas maintenant</button><button class="btn btn-principal" id="dep-go" style="font-size:16px">Commencer</button></div>
+  </div>
+</div>
+
 <!-- RÈGLE -->
 <div class="voile" id="f-regle" hidden>
   <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="regle-titre">
@@ -108,6 +124,43 @@ import '@fontsource/chakra-petch/700.css';
     <p style="margin:0;color:var(--doux)">Des grilles rien que pour s'entraîner, de la plus simple à la plus dure. Elles ne comptent pas au classement.</p>
     <div class="choix-entrainement" id="choix-entrainement"></div>
     <button class="btn" id="ent-fermer">Fermer</button>
+  </div>
+</div>
+
+<!-- RÈGLES ET INFOS -->
+<div class="voile" id="f-infos" hidden>
+  <div class="fenetre infos" role="dialog" aria-modal="true" aria-labelledby="infos-titre">
+    <h3 id="infos-titre">Règles et infos</h3>
+    <section><h4>Le jeu</h4>
+      <p>Relie l'éclair à l'étoile d'un seul fil, en passant par toutes les cases, une seule fois chacune. Sur une <b class="rouge">boule rouge</b>, le fil tourne ; sur une <b class="or">boule dorée</b>, il va tout droit. On ne passe jamais sur un cadeau ni sur un sapin.</p></section>
+    <section><h4>Une grille par jour</h4>
+      <p>Du 1er au 24 décembre, une nouvelle grille s'ouvre chaque nuit à minuit (heure de Cotonou), un peu plus dure que la veille. Les grilles passées restent jouables.</p></section>
+    <section><h4>Le chrono et ton temps</h4>
+      <ul>
+        <li>Le chrono démarre quand tu appuies sur <b>Commencer</b>. C'est à ce moment que la grille apparaît.</li>
+        <li>Il ne s'arrête plus : si tu recommences ou que tu quittes la grille, le temps continue. En revenant, tu reprends le même essai.</li>
+        <li>Chaque indice ajoute 5 secondes.</li>
+        <li>C'est le serveur qui mesure le temps et vérifie ton fil : un temps trafiqué n'est pas accepté.</li>
+      </ul></section>
+    <section><h4>Le classement</h4>
+      <ul>
+        <li><b>Seul ton premier essai compte.</b> Tu peux rejouer ensuite pour le plaisir, sans changer ton classement.</li>
+        <li>Le classement d'une grille reste ouvert jusqu'au lendemain 6 h. Après, elle se joue sans classement.</li>
+        <li>Le classement général compte d'abord le nombre de grilles terminées, puis le temps moyen.</li>
+        <li>Les lutins (avec un bonnet) sont les personnages du jeu : ils donnent un temps à battre quand il y a encore peu de joueurs.</li>
+      </ul></section>
+    <section><h4>La flamme</h4>
+      <p>Elle monte chaque jour où tu termines la grille du jour le jour même, et repart de zéro si tu sautes un jour.</p></section>
+    <section><h4>Ton pseudo</h4>
+      <ul>
+        <li>Il est visible par tous dans le classement, et n'appartient qu'à toi. Pas de numéro de téléphone.</li>
+        <li>Pas de compte : ton pseudo, tes temps et ta flamme sont gardés sur ce téléphone, dans ce navigateur. Ils restent tant que tu joues ici, mais disparaissent si tu effaces les données du site ou changes de navigateur.</li>
+      </ul></section>
+    <section><h4>L'entraînement</h4>
+      <p>Cinq grilles rien que pour s'entraîner, de « Premiers pas » à « Expert ». Elles ne comptent pas au classement et ne ressemblent pas aux grilles du jour.</p></section>
+    <section><h4>Tes données</h4>
+      <p>Le jeu compte les parties de façon anonyme (un identifiant tiré au hasard, jamais ton nom ni ton numéro) pour s'améliorer. Ton avis est le bienvenu : bouton « Donner mon avis ».</p></section>
+    <button class="btn btn-principal" id="infos-ok">J'ai compris</button>
   </div>
 </div>
 
@@ -245,6 +298,11 @@ import '@fontsource/chakra-petch/700.css';
 .avent .nom input { min-width: 0; border-radius: 10px; border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); padding: 10px 12px; font: inherit; }
 .avent .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .avent .choix-entrainement { display: grid; gap: 8px; }
+.avent .infos section { display: grid; gap: 6px; }
+.avent .infos h4 { margin: 0; font: 700 15px var(--titre); color: #fff; }
+.avent .infos p, .avent .infos ul { margin: 0; color: var(--doux); font-size: 14px; line-height: 1.5; }
+.avent .infos ul { padding-left: 18px; display: grid; gap: 4px; }
+.avent .infos b { color: var(--texte); }
 .avent .choix-entrainement button { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; text-align: left; padding: 12px 14px;
   border-radius: 12px; border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); font: inherit; cursor: pointer; }
 .avent .choix-entrainement button:hover { border-color: var(--or); }
@@ -408,34 +466,41 @@ function choisirEntrainement() {
 }
 $("ent-fermer").onclick = () => { $("f-entrainement").hidden = true; };
 $("cal-entrainement").onclick = choisirEntrainement;
-const grillesOuvertes = {};                        // le temps de la visite seulement
-async function lancer(jour) {
+let essaiClasse = false;                          // le premier essai du jour, le seul qui compte
+let departJour = null;
+function lancer(jour) {
   if (jour === 0) { choisirEntrainement(); return; }
-  let n = NIVEAUX.find((x) => x.jour === jour);
-  if (jour > 0) {
-    let g = grillesOuvertes[jour];
-    if (!g) {
-      try { g = await appel("avent_grille", { p_jour: jour, p_appareil: appareil() }); }
-      catch (e) {
-        alert(e.message === "grille fermée" ? "Cette grille n'est pas encore ouverte." : "Impossible d'ouvrir la grille : vérifie ta connexion et réessaie.");
-        return;
-      }
-      if (!g) { alert("Grille introuvable."); return; }
-      grillesOuvertes[jour] = g;
-    }
-    n = Object.assign({}, n, g, { jour });
-  }
-  demarrer(n);
+  departJour = NIVEAUX.find((x) => x.jour === jour);
+  $("dep-titre").textContent = `Jour ${jour} · ${departJour.titre}`;
+  $("dep-detail").textContent = `${departJour.w} × ${departJour.h} · difficulté ${departJour.etoiles}/5`;
+  $("dep-etat").textContent = "";
+  $("f-depart").hidden = false;
+  if (!memoire.regleVue) { ouvrirRegle(); memoire.regleVue = true; ecrire(memoire); }
 }
+$("dep-annuler").onclick = () => { $("f-depart").hidden = true; };
+$("dep-go").onclick = async () => {
+  const meta = departJour, b = $("dep-go");
+  b.disabled = true;
+  let r;
+  try { r = await appel("avent_commencer", { p_jour: meta.jour, p_appareil: appareil() }); }
+  catch (e) {
+    $("dep-etat").textContent = e.message === "grille fermée" ? "Cette grille n'est pas encore ouverte." : "Impossible d'ouvrir la grille : vérifie ta connexion et réessaie.";
+    b.disabled = false; return;
+  }
+  b.disabled = false; $("f-depart").hidden = true;
+  demarrer(Object.assign({}, meta, r.grille, { jour: meta.jour }), r);   // la grille arrive avec le chrono : impossible de l'étudier avant
+};
 
 function assurerPartie() {
   if (niv.jour > 0 && !partie) partie = appel("avent_commencer", { p_jour: niv.jour, p_appareil: appareil() }).catch(() => null);
   return partie;
 }
 
-function demarrer(n) {
+function demarrer(n, serveur) {
   niv = n;
-  partie = null; partieFinie = null;
+  clearInterval(minuteur);
+  partie = serveur ? Promise.resolve(serveur.partie) : null; partieFinie = null;
+  essaiClasse = !!(serveur && serveur.classee);
   cases = new Set(niv.cases.map(cle));
   chemin = [niv.depart];
   signalerAbandon();
@@ -449,6 +514,13 @@ function demarrer(n) {
   musique.demarrer();
   $("record").textContent = "Record : " + (memoire.records[cleRecord(niv)] ? fmt(memoire.records[cleRecord(niv)]) : "—");
   message("Pose ton doigt sur l'éclair et glisse.");
+  if (serveur) {                                   // le chrono officiel tourne déjà côté serveur
+    debut = performance.now() - (serveur.ecoule_ms || 0);
+    indicesPris = serveur.indices || 0; penalite = 5000 * indicesPris;
+    minuteur = setInterval(majChrono, 200);
+    message(!serveur.classee ? "Essai libre : seul ton premier essai compte au classement."
+      : (serveur.ecoule_ms > 3000 ? "Reprise : ton chrono a continué pendant ton absence." : "C'est parti, le chrono tourne !"));
+  }
   montrer("jeu");
   redimensionner();
   requestAnimationFrame(redimensionner);      // une deuxième fois, une fois la mise en page posée
@@ -674,7 +746,15 @@ requestAnimationFrame(boucle);
 
 // ---------- boutons ----------
 $("b-annuler").onclick = () => { if (!fini && chemin.length > 1) { chemin.pop(); son.retour(); apresCoup(); } };
-$("b-recommencer").onclick = () => { clearInterval(minuteur); demarrer(niv); };
+$("b-recommencer").onclick = () => {
+  if (fini) return;
+  if (niv.jour > 0) {                              // grille du jour : on efface le fil, mais le chrono continue
+    chemin = [niv.depart]; indiceCase = null; apresCoup();
+    message("Fil effacé : le chrono continue.");
+    return;
+  }
+  demarrer(niv);
+};
 function majIndices() { $("b-indice").innerHTML = 'Indice<br><small style="opacity:.7">+5&nbsp;s</small>'; }
 let indiceEnCours = false;
 $("b-indice").onclick = async () => {
@@ -765,18 +845,23 @@ async function appel(fonction, corps) {
   if (!r.ok) throw new Error((d && d.message) || "erreur");
   return d;
 }
-let horsDelai = false, organisateur = false;       // grille d'un jour passé : classement fermé le lendemain à 6 h
+function textePseudo(raison) {
+  if (raison === "numéro") return "Pas de numéro : ton pseudo est visible par tous";
+  return "Ce pseudo est déjà utilisé : choisis-en un autre";
+}
+let horsDelai = false, organisateur = false, essaiLibre = false;       // grille d'un jour passé : classement fermé le lendemain à 6 h
 function raisonNonClasse(r) {
   horsDelai = r && r.raison === "hors délai";
+  essaiLibre = r && r.raison === "essai libre";
   organisateur = r && r.raison === "organisateur";
-  if (r && (r.raison === "nom pris" || r.raison === "nom refusé")) {
+  if (r && (r.raison === "nom pris" || r.raison === "nom refusé" || r.raison === "numéro")) {
     memoire.nom = ""; ecrire(memoire);
     $("f-nom").hidden = false; $("nom").value = "";
-    $("nom").placeholder = r.raison === "nom pris" ? "Ce pseudo est déjà pris : choisis-en un autre" : "Ce pseudo n'est pas accepté : choisis-en un autre";
+    $("nom").placeholder = textePseudo(r.raison);
   }
 }
 async function terminerPartie() {
-  horsDelai = organisateur = false;
+  horsDelai = organisateur = essaiLibre = false;
   try {
     const id = await partie;
     if (!id) return null;
@@ -815,6 +900,8 @@ function ouvrirAvis() {
 }
 function majNotes() { document.querySelectorAll(".avent .note").forEach((b) => b.classList.toggle("on", Number(b.dataset.note) <= noteAvis)); }
 document.querySelectorAll("[data-avis]").forEach((b) => b.addEventListener("click", ouvrirAvis));
+document.querySelectorAll("[data-infos]").forEach((b) => b.addEventListener("click", () => { $("f-infos").hidden = false; $("infos-ok").focus({ preventScroll: true }); document.querySelector("#f-infos .fenetre").scrollTop = 0; stat("regle", null, { infos: true }); }));
+$("infos-ok").onclick = () => { $("f-infos").hidden = true; };
 document.querySelectorAll(".avent .note").forEach((b) => b.addEventListener("click", () => { noteAvis = Number(b.dataset.note); majNotes(); }));
 $("avis-fermer").onclick = () => { $("f-avis").hidden = true; };
 $("form-avis").addEventListener("submit", async (e) => {
@@ -858,6 +945,7 @@ async function afficherClassement() {
     : APERCU ? "Mode aperçu : les temps ne sont pas envoyés au classement."
     : horsDelai ? "Le classement de cette grille est fermé (il se ferme le lendemain à 6 h) : ton temps reste sur ton téléphone."
     : organisateur ? "Organisateur : tes temps ne comptent pas au classement."
+    : essaiLibre ? "Essai libre : seul ton premier essai de la grille compte au classement."
     : (joueurs < 5 ? "Les lutins sont les personnages du jeu : ils te donnent un temps à battre." : `${joueurs} joueurs sur cette grille.`);
 }
 
@@ -883,9 +971,9 @@ $("f-nom").addEventListener("submit", async (e) => {
     memoire.nom = await appel("avent_choisir_nom", { p_appareil: appareil(), p_nom: v });
   } catch (err) {
     bouton.disabled = false;
-    if (err.message === "nom pris" || err.message === "nom refusé") {
+    if (err.message === "nom pris" || err.message === "nom refusé" || err.message === "numéro") {
       $("nom").value = "";
-      $("nom").placeholder = err.message === "nom pris" ? "Ce pseudo est déjà pris : choisis-en un autre" : "Ce pseudo n'est pas accepté : choisis-en un autre";
+      $("nom").placeholder = textePseudo(err.message);
       $("nom").focus();
       return;
     }
@@ -897,7 +985,7 @@ $("f-nom").addEventListener("submit", async (e) => {
   await classerPartie();
   afficherClassement();
 });
-$("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; demarrer(niv); };
+$("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; niv.jour > 0 ? lancer(niv.jour) : demarrer(niv); };
 $("vic-partager").onclick = async () => {
   const texte = `</Avent> · ${niv.jour ? "jour " + niv.jour : "entraînement"} : guirlande allumée en ${$("vic-temps").textContent}` + (indicesPris ? "" : " sans indice") +
     (flamme() ? ` · flamme ${flamme()}` : "") + ". Tu fais mieux ?";
@@ -949,8 +1037,13 @@ function audioPret() {
   if (!audio) {
     try {
       audio = new (window.AudioContext || window.webkitAudioContext)();
-      const maitre = audio.createGain(); maitre.gain.value = 0.9;
-      const compresseur = audio.createDynamicsCompressor(); compresseur.connect(audio.destination); maitre.connect(compresseur);
+      // le compresseur sert seulement de garde-fou contre la saturation : réglé par défaut (seuil −24 dB, rapport 12),
+      // il écrasait tout et rendait le son très faible sur téléphone
+      const maitre = audio.createGain(); maitre.gain.value = 1.4;
+      const compresseur = audio.createDynamicsCompressor();
+      compresseur.threshold.value = -6; compresseur.knee.value = 6; compresseur.ratio.value = 8;
+      compresseur.attack.value = 0.003; compresseur.release.value = 0.15;
+      compresseur.connect(audio.destination); maitre.connect(compresseur);
       sortieMusique = audio.createGain(); sortieMusique.connect(maitre);
       sortieEffets = audio.createGain(); sortieEffets.connect(maitre);
       appliquerSon();
@@ -960,8 +1053,8 @@ function audioPret() {
   return true;
 }
 function appliquerSon() {
-  if (sortieMusique) sortieMusique.gain.value = reglageSon === "tout" ? 0.16 : 0;
-  if (sortieEffets) sortieEffets.gain.value = reglageSon === "muet" ? 0 : 0.5;
+  if (sortieMusique) sortieMusique.gain.value = reglageSon === "tout" ? 0.28 : 0;
+  if (sortieEffets) sortieEffets.gain.value = reglageSon === "muet" ? 0 : 0.8;
   const textes = { tout: "Son", effets: "Effets", muet: "Muet" };
   document.querySelectorAll("[data-son-texte]").forEach((e) => e.textContent = textes[reglageSon]);
   document.querySelectorAll("[data-onde]").forEach((e) => e.style.opacity = reglageSon === "muet" ? 0 : (reglageSon === "effets" ? 0.4 : 1));

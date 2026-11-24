@@ -2,147 +2,268 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Mise en page : un tableau de bord sombre (la DA du jeu), des onglets en haut, une colonne lisible au téléphone.
+/* Mise en page : la DA du jeu (nuit, guirlande verte), une barre de sections à gauche sur ordinateur et en haut
+   au téléphone ; chaque section commence par ses chiffres clés, puis ses graphiques, puis le détail en tableau.
    Un seul thème, voulu : celui du jeu. */
 :root {
-  --fond: #050b0e; --surface: #0b1a1e; --surface-2: #10242a; --ligne: #173f33;
-  --vert: #1ef2a0; --violet: #8c6fd8; --or: #ffce5c; --rouge: #ff6b6b;
+  --fond: #050b0e; --surface: #0b1a1e; --surface-2: #10242a; --surface-3: #16303a; --ligne: #173f33; --ligne-2: #21503f;
+  --vert: #1ef2a0; --violet: #8c6fd8; --or: #ffce5c; --bleu: #5abedc; --rouge: #ff6b6b;
   --texte: #d3efe2; --doux: #8fb3a2; --pale: #5e7f70;
   --titre: "Chakra Petch", "Trebuchet MS", system-ui, sans-serif;
+  --corps: "IBM Plex Sans", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   color-scheme: dark;
 }
-body { background: var(--fond); color: var(--texte); font-family: var(--mono); font-size: 14px; line-height: 1.5;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.page { max-width: 1100px; margin: 0 auto; padding-block: 18px 40px; display: grid; gap: 18px; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--fond); color: var(--texte); font: 14px/1.5 var(--corps); }
+.app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100vh; }
+.cote { position: sticky; top: 0; align-self: start; height: 100vh; padding: 22px 14px; border-right: 1px solid var(--ligne); display: flex; flex-direction: column; gap: 18px; background: linear-gradient(180deg, #071216, var(--fond)); }
+.marque { display: grid; gap: 2px; padding: 0 8px; }
+.marque b { font: 700 20px var(--titre); color: #fff; }
+.marque span { font: 500 12px var(--mono); color: var(--vert); }
+.guirlande { height: 10px; margin: 0 8px; background: radial-gradient(circle at 5px 5px, var(--or) 3px, transparent 4px) 0 0 / 20px 10px, radial-gradient(circle at 15px 5px, var(--vert) 3px, transparent 4px) 0 0 / 20px 10px; opacity: .8; }
+.nav { display: grid; gap: 2px; }
+.nav button { display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; background: none; border: 0; color: var(--doux); padding: 9px 10px; border-radius: 10px; cursor: pointer; font: 500 14px var(--corps); }
+.nav button:hover { background: var(--surface); color: var(--texte); }
+.nav button[aria-current="true"] { background: var(--surface-2); color: #fff; box-shadow: inset 2px 0 0 var(--vert); }
+.nav .badge { font: 500 11px var(--mono); color: #1b0f00; background: var(--or); border-radius: 999px; padding: 0 7px; }
+.liens { margin-top: auto; display: grid; gap: 6px; padding: 0 8px; }
+.liens a { color: var(--doux); font: 500 12.5px var(--mono); text-decoration: none; }
+.liens a:hover { color: var(--vert); }
+main { min-width: 0; padding-block: 22px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.contenu { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; width: 100%; }
+.barre-haut { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 10px; }
 h1, h2, h3 { font-family: var(--titre); margin: 0; color: #fff; text-wrap: balance; }
-h1 { font-size: 28px; } h2 { font-size: 20px; } h3 { font-size: 16px; }
-button, select { font: inherit; }
-button:focus-visible, select:focus-visible { outline: 2px solid var(--vert); outline-offset: 2px; }
-.entete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
-.marque { color: var(--vert); font-family: var(--titre); font-weight: 700; }
-.etat { font-size: 12px; color: var(--doux); }
-.onglets { display: flex; flex-wrap: wrap; gap: 6px; }
-.onglet { border: 1px solid var(--ligne); background: var(--surface); color: var(--texte); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
-.onglet[aria-selected="true"] { background: var(--vert); color: #04150d; border-color: var(--vert); font-weight: 500; }
-.btn { border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); border-radius: 10px; padding: 6px 12px; cursor: pointer; }
+h1 { font-size: 26px; } h2 { font-size: 17px; letter-spacing: .01em; }
+.sous { color: var(--doux); font-size: 13px; margin: 2px 0 0; }
+.etat { font: 12px var(--mono); color: var(--doux); }
+button, select, input { font: inherit; }
+:focus-visible { outline: 2px solid var(--vert); outline-offset: 2px; }
+.btn { border: 1px solid var(--ligne-2); background: var(--surface-2); color: var(--texte); border-radius: 10px; padding: 6px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .btn:hover { border-color: var(--vert); }
 .btn.danger:hover { border-color: var(--rouge); color: var(--rouge); }
-.carte { background: var(--surface); border: 1px solid var(--ligne); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
-.tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.tuile { background: var(--surface); border: 1px solid var(--ligne); border-radius: 14px; padding: 12px 14px; display: grid; gap: 2px; }
-.tuile b { font-family: var(--titre); font-size: 28px; color: #fff; font-variant-numeric: tabular-nums; line-height: 1.1; }
-.tuile span { color: var(--doux); font-size: 12px; }
-.tuile i { font-style: normal; color: var(--pale); font-size: 11.5px; }
-.deux-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
-.tableau { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--ligne); white-space: nowrap; }
-th { color: var(--doux); font-weight: 500; font-size: 12px; }
-td.n, th.n { text-align: right; }
-.vide { color: var(--doux); padding: 14px; border: 1px dashed var(--ligne); border-radius: 12px; }
+.btn.principal { background: var(--vert); color: #04150d; border-color: var(--vert); font-weight: 600; }
+.grille-tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+.tuile { background: var(--surface); border: 1px solid var(--ligne); border-radius: 14px; padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.tuile b { font: 700 27px/1.1 var(--titre); color: #fff; font-variant-numeric: tabular-nums; }
+.tuile span { color: var(--doux); font-size: 12.5px; }
+.tuile i { font: normal 11.5px var(--mono); color: var(--pale); }
+.tuile.accent { border-color: var(--ligne-2); background: linear-gradient(160deg, #0f2a25, var(--surface)); }
+.cartes { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+.carte { grid-column: span 12; background: var(--surface); border: 1px solid var(--ligne); border-radius: 16px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.carte.moitie { grid-column: span 6; } .carte.tiers { grid-column: span 4; } .carte.deux-tiers { grid-column: span 8; }
+.entete-carte { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
 .note { color: var(--pale); font-size: 12px; margin: 0; }
-.barres { display: grid; gap: 6px; }
-.barre { display: grid; grid-template-columns: 90px 1fr 48px; gap: 8px; align-items: center; font-size: 12.5px; }
-.barre .fond { height: 10px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
-.barre .fond i { display: block; height: 100%; background: var(--vert); border-radius: 6px; }
-.graphe { width: 100%; height: 220px; display: block; }
-.legende { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--doux); }
+.vide { color: var(--doux); padding: 18px; border: 1px dashed var(--ligne); border-radius: 12px; text-align: center; font-size: 13px; }
+.legende { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--doux); }
 .legende span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; background: var(--c); vertical-align: -1px; }
-.grilles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.grille { background: var(--surface); border: 1px solid var(--ligne); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
-.grille canvas { width: 100%; aspect-ratio: 1; border-radius: 10px; background: var(--surface-2); }
-.grille .titre { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.grille .titre b { font-family: var(--titre); color: #fff; }
-.grille .chiffres { font-size: 12px; color: var(--doux); display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-variant-numeric: tabular-nums; }
-.pill { font-size: 11.5px; border-radius: 999px; padding: 2px 8px; border: 1px solid var(--ligne); color: var(--doux); white-space: nowrap; }
+svg.graphe { width: 100%; display: block; overflow: visible; }
+svg.graphe text { font: 11px var(--mono); fill: var(--pale); }
+.bulle { position: fixed; pointer-events: none; z-index: 20; background: #0f2329; border: 1px solid var(--ligne-2); border-radius: 10px; padding: 8px 10px; font: 12px/1.45 var(--mono); color: var(--texte); box-shadow: 0 8px 24px #0008; max-width: 260px; }
+.bulle b { color: #fff; font-family: var(--titre); }
+.entonnoir { display: grid; gap: 8px; }
+.etape { display: grid; grid-template-columns: minmax(110px, 170px) 1fr 64px; gap: 10px; align-items: center; font-size: 13px; }
+.etape .piste { height: 22px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.etape .piste i { display: block; height: 100%; background: linear-gradient(90deg, var(--vert), #12b878); border-radius: 6px; }
+.etape .val { text-align: right; font: 500 13px var(--mono); font-variant-numeric: tabular-nums; }
+.etape .val small { color: var(--pale); display: block; font-size: 11px; }
+.tableau { overflow: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--ligne); white-space: nowrap; }
+th { color: var(--doux); font: 500 11.5px var(--mono); text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; background: var(--surface); }
+td.n, th.n { text-align: right; }
+tr:hover td { background: #0e2126; }
+.chaleur td.c { text-align: center; font: 500 12px var(--mono); }
+.pseudo { color: #fff; font-weight: 500; }
+.anonyme { color: var(--pale); font-family: var(--mono); font-size: 12px; }
+.pill { font: 500 11px var(--mono); border-radius: 999px; padding: 2px 8px; border: 1px solid var(--ligne-2); color: var(--doux); white-space: nowrap; justify-self: start; }
 .pill.ok { color: var(--vert); border-color: var(--vert); }
 .pill.alerte { color: var(--rouge); border-color: var(--rouge); }
 .pill.or { color: var(--or); border-color: var(--or); }
-.avis { display: grid; gap: 10px; }
-.un-avis { background: var(--surface); border: 1px solid var(--ligne); border-radius: 12px; padding: 12px; display: grid; gap: 6px; }
+.grilles { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.grille { background: var(--surface-2); border: 1px solid var(--ligne); border-radius: 14px; padding: 12px; display: grid; gap: 8px; align-content: start; }
+.grille canvas { width: 100%; aspect-ratio: 1; border-radius: 10px; background: var(--surface); }
+.grille .titre { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.grille .titre b { font-family: var(--titre); color: #fff; }
+.grille .chiffres { font: 12px var(--mono); color: var(--doux); display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-variant-numeric: tabular-nums; }
+.un-avis { background: var(--surface-2); border: 1px solid var(--ligne); border-radius: 12px; padding: 12px; display: grid; gap: 6px; }
 .un-avis.nonlu { border-color: var(--or); }
 .un-avis p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .etoiles { color: var(--or); letter-spacing: 2px; }
 .rangee { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
 .confirmer { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--rouge); }
-.toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--ligne); border-radius: 10px; padding: 8px 14px; z-index: 5; max-width: calc(100% - 32px); }
-[hidden] { display: none !important; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+select, input[type="search"] { background: var(--surface-2); color: var(--texte); border: 1px solid var(--ligne-2); border-radius: 10px; padding: 6px 10px; }
+.toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--ligne-2); border-radius: 10px; padding: 8px 14px; z-index: 30; max-width: calc(100% - 32px); }
+@media (max-width: 980px) { .carte.moitie, .carte.tiers, .carte.deux-tiers { grid-column: span 12; } }
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+  .cote { position: sticky; top: env(safe-area-inset-top, 0px); height: auto; z-index: 10; flex-direction: row; align-items: center; padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); border-right: 0; border-bottom: 1px solid var(--ligne); background: var(--fond); overflow-x: auto; }
+  .marque, .guirlande, .liens { display: none; }
+  .nav { display: flex; gap: 4px; }
+  .nav button { white-space: nowrap; padding: 7px 10px; }
+  .nav button[aria-current="true"] { box-shadow: inset 0 -2px 0 var(--vert); }
+  .etape { grid-template-columns: 1fr 64px; } .etape .piste { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
 </style>
 
-<div class="page">
-  <div class="entete">
-    <div><span class="marque">&lt;/Avent&gt;</span> <h1 style="display:inline">Admin des guirlandes</h1></div>
-    <div style="display:flex;gap:10px;align-items:center"><span class="etat" id="etat">Connexion à Supabase…</span><button class="btn" id="actualiser">Actualiser</button></div>
-  </div>
-  <div class="onglets" role="tablist">
-    <button class="onglet" role="tab" data-onglet="ensemble" aria-selected="true">Vue d'ensemble</button>
-    <button class="onglet" role="tab" data-onglet="retention">Rétention</button>
-    <button class="onglet" role="tab" data-onglet="grilles">Les 24 grilles</button>
-    <button class="onglet" role="tab" data-onglet="classement">Classement</button>
-    <button class="onglet" role="tab" data-onglet="avis">Avis <span id="badge-avis"></span></button>
-  </div>
-
-  <!-- VUE D'ENSEMBLE -->
-  <section data-vue="ensemble" class="page" style="padding:0">
-    <div class="tuiles" id="tuiles"></div>
-    <div class="carte">
-      <div class="rangee"><h2>Jour après jour</h2><div class="legende"><span style="--c:#5e7f70">visiteurs</span><span style="--c:#8c6fd8">joueurs</span><span style="--c:#1ef2a0">ont fini une grille</span></div></div>
-      <svg class="graphe" id="graphe" role="img" aria-label="Visiteurs, joueurs et finisseurs par jour"></svg>
-      <div class="tableau"><table id="t-jours"></table></div>
+<div class="app">
+  <aside class="cote">
+    <div class="marque"><b>Les guirlandes</b><span>&lt;/admin&gt; · Avent 2026</span></div>
+    <div class="guirlande" aria-hidden="true"></div>
+    <nav class="nav" id="nav" aria-label="Sections">
+      <button data-vue="ensemble" aria-current="true">Vue d'ensemble</button>
+      <button data-vue="joueurs">Joueurs</button>
+      <button data-vue="retention">Rétention</button>
+      <button data-vue="grilles">Les 24 grilles</button>
+      <button data-vue="entrainement">Entraînement</button>
+      <button data-vue="classement">Classement</button>
+      <button data-vue="avis">Avis <span class="badge" id="badge-avis" hidden></span></button>
+    </nav>
+    <div class="liens">
+      <a href="https://simeon013.github.io/avent" target="_blank" rel="noopener">Ouvrir le jeu ↗</a>
+      <a href="https://simeon013.github.io/avent#apercu" target="_blank" rel="noopener">Aperçu organisateur ↗</a>
+      <a href="https://claude.ai/artifact/Aj3nyA8sPpWkxcDjMqyVxi" target="_blank" rel="noopener">App des contenus ↗</a>
     </div>
-    <div class="deux-col">
-      <div class="carte"><h2>D'où ils viennent</h2><div class="barres" id="sources"></div><p class="note">Le site d'où vient le visiteur (Threads, Instagram, LinkedIn…) ; « direct » : lien ouvert depuis une appli qui ne le dit pas.</p></div>
-      <div class="carte"><h2>Comportement en partie</h2><div class="barres" id="comportement"></div></div>
-    </div>
-  </section>
+  </aside>
 
-  <!-- RÉTENTION -->
-  <section data-vue="retention" class="page" style="padding:0" hidden>
-    <div class="carte">
-      <h2>Ils reviennent ?</h2>
-      <p class="note">Chaque ligne : les appareils venus pour la première fois ce jour-là, et la part revenue jouer au moins une fois ensuite (1, 3 et 7 jours plus tard ou après). Un « appareil » = un téléphone ou un navigateur : pas de compte.</p>
-      <div class="tableau"><table id="t-cohortes"></table></div>
-    </div>
-    <div class="deux-col">
-      <div class="carte"><h2>Combien de grilles chacun a fini</h2><div class="barres" id="assiduite"></div></div>
-      <div class="carte"><h2>Flammes</h2><div class="barres" id="flammes"></div><p class="note">La plus longue série (jours d'affilée, grille finie le jour même) atteinte par chaque appareil.</p></div>
-    </div>
-  </section>
+  <main>
+    <div class="contenu">
+      <div class="barre-haut">
+        <div><h1 id="titre-vue">Vue d'ensemble</h1><p class="sous" id="sous-vue">Tout le jeu en un coup d'œil : qui vient, qui joue, qui finit.</p></div>
+        <div class="outils"><span class="etat" id="etat">Connexion à Supabase…</span><button class="btn principal" id="actualiser">Actualiser</button></div>
+      </div>
 
-  <!-- GRILLES -->
-  <section data-vue="grilles" class="page" style="padding:0" hidden>
-    <div class="rangee"><p class="note" style="margin:0">Les 25 grilles du jeu (0 = entraînement), avec leurs chiffres. Toutes ont une seule solution, vérifiée à la création.</p>
-      <label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="voir-solutions"> Montrer les solutions</label></div>
-    <div class="grilles" id="grilles"></div>
-  </section>
+      <!-- VUE D'ENSEMBLE -->
+      <section data-section="ensemble" class="contenu" style="gap:14px">
+        <div class="grille-tuiles" id="tuiles"></div>
+        <div class="cartes">
+          <div class="carte deux-tiers">
+            <div class="entete-carte"><h2>Jour après jour</h2><div class="legende"><span style="--c:var(--bleu)">visiteurs</span><span style="--c:var(--violet)">joueurs</span><span style="--c:var(--vert)">ont fini une grille</span></div></div>
+            <svg class="graphe" id="g-jours" height="240" role="img" aria-label="Visiteurs, joueurs et finisseurs par jour"></svg>
+          </div>
+          <div class="carte tiers">
+            <h2>L'entonnoir</h2>
+            <div class="entonnoir" id="entonnoir"></div>
+            <p class="note">Appareils uniques, depuis le début. Chaque étape en % de la première.</p>
+          </div>
+          <div class="carte moitie">
+            <div class="entete-carte"><h2>Nouveaux et habitués</h2><div class="legende"><span style="--c:var(--or)">nouveaux</span><span style="--c:var(--vert)">revenus</span></div></div>
+            <svg class="graphe" id="g-nouveaux" height="200" role="img" aria-label="Appareils actifs par jour, nouveaux et revenus"></svg>
+          </div>
+          <div class="carte moitie">
+            <div class="entete-carte"><h2>À quelle heure on joue</h2><span class="note">parties commencées, heure de Cotonou</span></div>
+            <svg class="graphe" id="g-heures" height="200" role="img" aria-label="Parties commencées par heure"></svg>
+          </div>
+          <div class="carte tiers"><h2>D'où ils viennent</h2><svg class="graphe" id="g-sources" role="img" aria-label="Visiteurs par site d'origine"></svg><p class="note">« direct » : lien ouvert depuis une appli qui ne dit pas d'où (WhatsApp, Instagram…).</p></div>
+          <div class="carte tiers"><h2>Sur quels écrans</h2><svg class="graphe" id="g-ecrans" role="img" aria-label="Visiteurs par largeur d'écran"></svg></div>
+          <div class="carte tiers"><h2>Par jour de la semaine</h2><svg class="graphe" id="g-semaine" height="180" role="img" aria-label="Parties commencées par jour de la semaine"></svg></div>
+          <div class="carte">
+            <h2>Le détail, jour par jour</h2>
+            <div class="tableau"><table id="t-jours"></table></div>
+          </div>
+        </div>
+      </section>
 
-  <!-- CLASSEMENT -->
-  <section data-vue="classement" class="page" style="padding:0" hidden>
-    <div class="carte">
-      <div class="rangee"><h2>Classement d'une grille</h2>
-        <label class="note" style="display:flex;gap:6px;align-items:center">Grille <select id="choix-jour"></select></label></div>
-      <div class="tableau"><table id="t-classement"></table></div>
-      <p class="note">« Retirer » efface ce score. « Bannir le pseudo » efface le pseudo et tous les scores de cet appareil (il devra en choisir un autre).</p>
+      <!-- JOUEURS -->
+      <section data-section="joueurs" class="contenu" style="gap:14px" hidden>
+        <div class="grille-tuiles" id="tuiles-joueurs"></div>
+        <div class="cartes">
+          <div class="carte tiers"><h2>Parties par personne</h2><svg class="graphe" id="g-parties" height="180" role="img" aria-label="Nombre d'appareils selon leur nombre de parties"></svg></div>
+          <div class="carte tiers"><h2>Grilles du jour finies par personne</h2><svg class="graphe" id="g-finies" height="180" role="img" aria-label="Nombre d'appareils selon leurs grilles finies"></svg></div>
+          <div class="carte tiers"><h2>Jours de visite par personne</h2><svg class="graphe" id="g-jours-actifs" height="180" role="img" aria-label="Nombre d'appareils selon leurs jours actifs"></svg></div>
+          <div class="carte">
+            <div class="entete-carte"><h2>Chaque joueur</h2>
+              <div class="outils"><input type="search" id="filtre-joueurs" placeholder="Chercher un pseudo" aria-label="Chercher un pseudo">
+                <select id="tri-joueurs" aria-label="Trier par"><option value="dernier">Vu récemment</option><option value="parties">Le plus de parties</option><option value="victoires">Le plus de victoires</option><option value="classees">Le plus de grilles classées</option><option value="jours_actifs">Le plus de jours</option></select></div></div>
+            <div class="tableau" style="max-height:560px"><table id="t-tous-joueurs"></table></div>
+            <p class="note">Un joueur = un appareil (un téléphone, un navigateur) : pas de compte. Sans pseudo, il apparaît sous un numéro anonyme.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- RÉTENTION -->
+      <section data-section="retention" class="contenu" style="gap:14px" hidden>
+        <div class="grille-tuiles" id="tuiles-retention"></div>
+        <div class="cartes">
+          <div class="carte deux-tiers"><h2>Combien reviennent, jour après jour</h2><svg class="graphe" id="g-courbe-retention" height="220" role="img" aria-label="Part des appareils revenus N jours après leur première visite"></svg>
+            <p class="note">Part des appareils revenus N jours après leur première visite, toutes cohortes réunies.</p></div>
+          <div class="carte tiers"><h2>Flammes atteintes</h2><svg class="graphe" id="g-flammes" height="180" role="img" aria-label="Plus longue série par appareil"></svg><p class="note">La plus longue série de jours d'affilée (grille finie le jour même) de chaque appareil.</p></div>
+          <div class="carte">
+            <h2>Les cohortes</h2>
+            <p class="note">Chaque ligne : les appareils venus pour la première fois ce jour-là, puis la part revenue chaque jour suivant.</p>
+            <div class="tableau"><table id="t-cohortes" class="chaleur"></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GRILLES -->
+      <section data-section="grilles" class="contenu" style="gap:14px" hidden>
+        <div class="cartes">
+          <div class="carte moitie"><h2>Réussite par grille</h2><svg class="graphe" id="g-reussite" height="220" role="img" aria-label="Part des premiers essais terminés, par grille"></svg><p class="note">Premiers essais terminés ÷ premiers essais commencés.</p></div>
+          <div class="carte moitie"><h2>Temps médian par grille</h2><svg class="graphe" id="g-temps" height="220" role="img" aria-label="Temps médian des premiers essais, par grille"></svg><p class="note">Temps officiel du premier essai, mesuré par le serveur, indices compris.</p></div>
+          <div class="carte moitie"><h2>Indices par grille</h2><svg class="graphe" id="g-indices" height="200" role="img" aria-label="Indices moyens par premier essai, par grille"></svg></div>
+          <div class="carte moitie"><h2>Où on abandonne</h2><svg class="graphe" id="g-abandon" height="200" role="img" aria-label="Avancée au moment de l'abandon"></svg><p class="note">Part de la grille déjà tracée quand le joueur quitte.</p></div>
+          <div class="carte">
+            <div class="entete-carte"><h2>Les grilles</h2><label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="voir-solutions"> Montrer les solutions</label></div>
+            <div class="grilles" id="grilles"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ENTRAÎNEMENT -->
+      <section data-section="entrainement" class="contenu" style="gap:14px" hidden>
+        <div class="cartes">
+          <div class="carte moitie"><div class="entete-carte"><h2>Parties par niveau</h2><div class="legende"><span style="--c:var(--vert)">finies</span><span style="--c:var(--violet)">non finies</span></div></div>
+            <svg class="graphe" id="g-entrainement" height="220" role="img" aria-label="Parties commencées et finies par niveau d'entraînement"></svg></div>
+          <div class="carte moitie"><h2>Le détail</h2><div class="tableau"><table id="t-entrainement"></table></div></div>
+          <div class="carte"><h2>Les grilles d'entraînement</h2><div class="grilles" id="grilles-entrainement"></div></div>
+        </div>
+      </section>
+
+      <!-- CLASSEMENT -->
+      <section data-section="classement" class="contenu" style="gap:14px" hidden>
+        <div class="cartes">
+          <div class="carte moitie">
+            <div class="entete-carte"><h2>Classement d'une grille</h2><label class="note" style="display:flex;gap:6px;align-items:center">Grille <select id="choix-jour"></select></label></div>
+            <div class="tableau"><table id="t-classement"></table></div>
+            <p class="note">« Retirer » efface ce score. Le temps est celui du premier essai, mesuré par le serveur.</p>
+          </div>
+          <div class="carte moitie">
+            <h2>Classement général</h2>
+            <div class="tableau"><table id="t-general"></table></div>
+            <p class="note">D'abord le nombre de grilles classées, puis le temps moyen. Les organisateurs n'y figurent pas.</p>
+          </div>
+          <div class="carte">
+            <h2>Les pseudos</h2>
+            <div class="tableau"><table id="t-pseudos"></table></div>
+            <p class="note">« C'est moi (organisateur) » : cet appareil ouvre toutes les grilles en avance (#apercu) et n'est jamais classé. « Bannir » efface le pseudo et ses scores.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- AVIS -->
+      <section data-section="avis" class="contenu" style="gap:14px" hidden>
+        <div class="grille-tuiles" id="tuiles-avis"></div>
+        <div class="cartes">
+          <div class="carte tiers"><h2>Les notes</h2><svg class="graphe" id="g-notes" height="180" role="img" aria-label="Répartition des notes"></svg></div>
+          <div class="carte deux-tiers"><h2>Les messages</h2><div style="display:grid;gap:10px" id="liste-avis"></div></div>
+        </div>
+      </section>
     </div>
-    <div class="carte"><h2>Les pseudos</h2><div class="tableau"><table id="t-joueurs"></table></div></div>
-  </section>
-
-  <!-- AVIS -->
-  <section data-vue="avis" class="page" style="padding:0" hidden>
-    <div class="tuiles" id="tuiles-avis"></div>
-    <div class="avis" id="liste-avis"></div>
-  </section>
+  </main>
 </div>
+<div class="bulle" id="bulle" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
 // l'entraînement est public ; les 24 vraies grilles et leurs solutions sont lues dans la table privée avent_grilles
 const ENTRAINEMENTS = __ENTRAINEMENTS__;
-let NIVEAUX = [...ENTRAINEMENTS];
+let NIVEAUX = [];
 const PROJET = "ujithhyzbfuyabogulzs";
 const $ = (id) => document.getElementById(id);
 const el = (tag, attrs = {}, enfants = []) => {
@@ -151,9 +272,11 @@ const el = (tag, attrs = {}, enfants = []) => {
   for (const c of [].concat(enfants)) if (c != null) e.append(c);
   return e;
 };
-const fmt = (ms) => { if (ms == null || isNaN(ms)) return "—"; const s = Math.round(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
-const pct = (a, b) => b ? Math.round(100 * a / b) + " %" : "—";
+const fmt = (ms) => { if (ms == null || ms === "" || isNaN(ms)) return "—"; const s = Math.round(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const pct = (a, b) => Number(b) ? Math.round(100 * a / b) + " %" : "—";
 const n = (v) => Number(v || 0);
+const dateFr = (d) => d ? String(d).slice(0, 10).split("-").reverse().slice(0, 2).join("/") : "—";
+const quand = (d) => d ? new Date(d).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 function toast(t) { const e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.m); toast.m = setTimeout(() => e.hidden = true, 3500); }
 
 // ---------- Supabase, par ton connecteur (tes droits, aucun jeton dans la page) ----------
@@ -181,192 +304,390 @@ async function sql(query) {
 }
 const lit = (v) => "'" + String(v ?? "").replace(/'/g, "''") + "'";
 const uuid = (v) => /^[0-9a-f-]{36}$/i.test(v) ? lit(v) + "::uuid" : "null";
-const DATE = "((cree at time zone 'Africa/Porto-Novo')::date)";
 
-// ---------- onglets ----------
-document.querySelectorAll("[data-onglet]").forEach((b) => b.addEventListener("click", () => {
-  document.querySelectorAll("[data-onglet]").forEach((x) => x.setAttribute("aria-selected", x === b ? "true" : "false"));
-  document.querySelectorAll("[data-vue]").forEach((v) => v.hidden = v.dataset.vue !== b.dataset.onglet);
-  try { localStorage.setItem("admin-onglet", b.dataset.onglet); } catch (e) {}
-}));
-try { const o = localStorage.getItem("admin-onglet"); if (o) document.querySelector(`[data-onglet="${o}"]`)?.click(); } catch (e) {}
+// ---------- navigation ----------
+const TITRES = {
+  ensemble: ["Vue d'ensemble", "Tout le jeu en un coup d'œil : qui vient, qui joue, qui finit."],
+  joueurs: ["Joueurs", "Chaque appareil : ses parties, ses victoires, ses jours de visite."],
+  retention: ["Rétention", "Est-ce qu'ils reviennent ? Les cohortes et les flammes."],
+  grilles: ["Les 24 grilles", "La difficulté réelle de chaque grille, et les grilles elles-mêmes."],
+  entrainement: ["Entraînement", "Les cinq grilles d'entraînement : qui s'y essaie, jusqu'où."],
+  classement: ["Classement", "Les classements, les pseudos et la modération."],
+  avis: ["Avis", "Ce que les joueurs en disent."],
+};
+let vueActive = "ensemble";
+function ouvrir(vue) {
+  vueActive = vue;
+  document.querySelectorAll("#nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.vue === vue ? "true" : "false"));
+  document.querySelectorAll("[data-section]").forEach((s) => s.hidden = s.dataset.section !== vue);
+  $("titre-vue").textContent = TITRES[vue][0]; $("sous-vue").textContent = TITRES[vue][1];
+  try { localStorage.setItem("admin-vue", vue); } catch (e) {}
+  requestAnimationFrame(toutAfficher);
+}
+document.querySelectorAll("#nav button").forEach((b) => b.addEventListener("click", () => ouvrir(b.dataset.vue)));
 
-// ---------- chargement ----------
+// ---------- petits graphiques en SVG, avec une bulle au survol ----------
+const NS = "http://www.w3.org/2000/svg";
+const svgEl = (t, a = {}) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+const C = { vert: "#1ef2a0", violet: "#8c6fd8", or: "#ffce5c", bleu: "#5abedc", rouge: "#ff6b6b", grille: "#173f33", pale: "#5e7f70" };
+const echappe = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function bulle(e, html) { const b = $("bulle"); if (!html) { b.hidden = true; return; } b.innerHTML = html; b.hidden = false;
+  const x = Math.min(e.clientX + 14, innerWidth - b.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - b.offsetHeight - 8); b.style.left = x + "px"; b.style.top = y + "px"; }
+function pasRond(max) { if (max <= 5) return 1; const p = Math.pow(10, Math.floor(Math.log10(max / 4))); for (const k of [1, 2, 5, 10]) if (max / (k * p) <= 5) return k * p; return 10 * p; }
+function cadre(svg, H) { svg.replaceChildren(); const W = svg.clientWidth || svg.parentElement.clientWidth || 600; svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("height", H); return W; }
+function videGraphe(svg, texte) { const H = 110, W = cadre(svg, H); const t = svgEl("text", { x: W / 2, y: H / 2, "text-anchor": "middle" }); t.textContent = texte; svg.append(t); }
+function hauteur(svg, defaut) { return Number(svg.dataset.h || svg.getAttribute("height")) || defaut; }
+function axeY(svg, m, W, H, max, format = (v) => v) {
+  const p = pasRond(max), haut = Math.max(p, Math.ceil(max / p) * p), y = (v) => H - m.b - (H - m.b - m.h) * v / haut;
+  for (let v = 0; v <= haut + 1e-9; v += p) {
+    svg.append(svgEl("line", { x1: m.g, x2: W - m.d, y1: y(v), y2: y(v), stroke: C.grille }));
+    const t = svgEl("text", { x: m.g - 6, y: y(v) + 4, "text-anchor": "end" }); t.textContent = format(v); svg.append(t);
+  }
+  return y;
+}
+function memoriserHauteur(svg) { if (!svg.dataset.h) svg.dataset.h = svg.getAttribute("height") || ""; }
+// courbes : series = [{cle, couleur, nom, aire}]
+function courbes(svg, donnees, series, { libelle = (d) => d.x, vide = "Pas encore de données." } = {}) {
+  memoriserHauteur(svg);
+  if (!donnees.length) return videGraphe(svg, vide);
+  const H = hauteur(svg, 220), W = cadre(svg, H), m = { g: 36, d: 10, h: 10, b: 24 };
+  const max = Math.max(1, ...donnees.flatMap((d) => series.map((s) => n(d[s.cle]))));
+  const y = axeY(svg, m, W, H, max);
+  const x = (i) => m.g + (donnees.length === 1 ? (W - m.g - m.d) / 2 : i * (W - m.g - m.d) / (donnees.length - 1));
+  for (const s of series) {
+    const pts = donnees.map((d, i) => `${x(i)},${y(n(d[s.cle]))}`).join(" ");
+    if (s.aire && donnees.length > 1) svg.append(svgEl("polygon", { points: `${x(0)},${y(0)} ${pts} ${x(donnees.length - 1)},${y(0)}`, fill: s.couleur, "fill-opacity": .1 }));
+    svg.append(svgEl("polyline", { points: pts, fill: "none", stroke: s.couleur, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    const k = donnees.length - 1; svg.append(svgEl("circle", { cx: x(k), cy: y(n(donnees[k][s.cle])), r: 4, fill: s.couleur, stroke: "#0b1a1e", "stroke-width": 2 }));
+  }
+  const pasX = Math.max(1, Math.ceil(donnees.length / 9));
+  donnees.forEach((d, i) => { if (i % pasX === 0 || i === donnees.length - 1) { const t = svgEl("text", { x: x(i), y: H - 6, "text-anchor": "middle" }); t.textContent = libelle(d); svg.append(t); } });
+  const repere = svgEl("line", { y1: m.h, y2: H - m.b, stroke: C.pale, "stroke-dasharray": "3 3", visibility: "hidden" }); svg.append(repere);
+  const zone = svgEl("rect", { x: m.g, y: 0, width: Math.max(1, W - m.g - m.d), height: H, fill: "transparent" }); svg.append(zone);
+  zone.addEventListener("pointermove", (e) => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * W / r.width;
+    const i = Math.max(0, Math.min(donnees.length - 1, Math.round((px - m.g) / ((W - m.g - m.d) / Math.max(1, donnees.length - 1)))));
+    repere.setAttribute("x1", x(i)); repere.setAttribute("x2", x(i)); repere.setAttribute("visibility", "visible");
+    bulle(e, `<b>${echappe(libelle(donnees[i]))}</b><br>` + series.map((s) => `<span style="color:${s.couleur}">●</span> ${echappe(s.nom)} : ${n(donnees[i][s.cle])}${s.suffixe || ""}`).join("<br>"));
+  });
+  zone.addEventListener("pointerleave", (e) => { repere.setAttribute("visibility", "hidden"); bulle(e, null); });
+}
+// barres verticales (empilées si plusieurs séries)
+function barresV(svg, donnees, series, { libelle = (d) => d.x, format = (v) => v, detail = null, vide = "Pas encore de données." } = {}) {
+  memoriserHauteur(svg);
+  if (!donnees.length || !donnees.some((d) => series.some((s) => n(d[s.cle])))) return videGraphe(svg, vide);
+  const H = hauteur(svg, 180), W = cadre(svg, H), m = { g: 40, d: 6, h: 10, b: 24 };
+  const max = Math.max(1e-9, ...donnees.map((d) => series.reduce((a, s) => a + n(d[s.cle]), 0)));
+  const y = axeY(svg, m, W, H, max, format);
+  const larg = (W - m.g - m.d) / donnees.length, b = Math.max(2, Math.min(34, larg * .7));
+  const pasX = Math.max(1, Math.ceil(donnees.length / 14));
+  donnees.forEach((d, i) => {
+    const cx = m.g + larg * (i + .5); let base = 0;
+    for (const s of series) {
+      const v = n(d[s.cle]); if (!v) continue;
+      const espace = base > 0 ? 2 : 0, y0 = y(base), y1 = y(base + v); base += v;
+      svg.append(svgEl("rect", { x: cx - b / 2, y: y1, width: b, height: Math.max(1, y0 - y1 - espace), rx: Math.min(4, b / 3), fill: s.couleur }));
+    }
+    if (i % pasX === 0) { const t = svgEl("text", { x: cx, y: H - 6, "text-anchor": "middle" }); t.textContent = libelle(d); svg.append(t); }
+    const zone = svgEl("rect", { x: cx - larg / 2, y: m.h, width: larg, height: H - m.b - m.h, fill: "transparent" });
+    zone.addEventListener("pointermove", (e) => bulle(e, `<b>${echappe(libelle(d))}</b><br>` + (detail ? detail(d) : series.map((s) => `<span style="color:${s.couleur}">●</span> ${echappe(s.nom)} : ${echappe(format(n(d[s.cle])))}`).join("<br>"))));
+    zone.addEventListener("pointerleave", (e) => bulle(e, null));
+    svg.append(zone);
+  });
+}
+// barres horizontales (catégories)
+function barresH(svg, donnees, { couleur = C.vert, vide = "Pas encore de données." } = {}) {
+  if (!donnees.length) return videGraphe(svg, vide);
+  const ligne = 26, H = donnees.length * ligne + 6, W = cadre(svg, H);
+  const g = Math.min(130, W * .4), d = 40, max = Math.max(1, ...donnees.map((x) => n(x.v)));
+  donnees.forEach((x, i) => {
+    const yy = i * ligne + 4;
+    const t = svgEl("text", { x: g - 8, y: yy + 15, "text-anchor": "end" }); t.textContent = String(x.nom).slice(0, 18); svg.append(t);
+    svg.append(svgEl("rect", { x: g, y: yy + 4, width: Math.max(1, W - g - d), height: 14, rx: 4, fill: "#10242a" }));
+    svg.append(svgEl("rect", { x: g, y: yy + 4, width: Math.max(2, (W - g - d) * n(x.v) / max), height: 14, rx: 4, fill: couleur }));
+    const v = svgEl("text", { x: W - 4, y: yy + 15, "text-anchor": "end", style: "fill:#d3efe2" }); v.textContent = n(x.v); svg.append(v);
+  });
+}
+
+// ---------- chargement : tout en une requête ----------
+const D = "((cree at time zone 'Africa/Porto-Novo')::date)";
+const AUJ = "((now() at time zone 'Africa/Porto-Novo')::date)";
+const REQUETE = `select json_build_object(
+ 'tot', (select row_to_json(t) from (select
+    count(distinct appareil) filter (where type='visite') visiteurs,
+    count(distinct appareil) filter (where type='debut') joueurs,
+    count(distinct appareil) filter (where type='victoire') finisseurs,
+    count(distinct appareil) filter (where type='victoire' and jour > 0) finisseurs_jour,
+    count(*) filter (where type='visite') visites,
+    count(*) filter (where type='debut') debuts, count(*) filter (where type='victoire') victoires,
+    count(*) filter (where type='abandon') abandons, count(*) filter (where type='indice') indices,
+    count(*) filter (where type='partage') partages, count(*) filter (where type='regle') regles,
+    count(*) filter (where type='avis_ouvert') avis_ouverts,
+    count(*) filter (where type='victoire' and coalesce((donnees->>'indices')::int, 0) = 0) sans_indice,
+    round(avg((donnees->>'erreurs')::numeric) filter (where type='victoire'), 1) erreurs_moy,
+    round(avg((donnees->>'retours')::numeric) filter (where type='victoire'), 1) retours_moy,
+    count(distinct appareil) filter (where type='visite' and ${D} = ${AUJ}) visiteurs_auj,
+    count(distinct appareil) filter (where type='debut' and ${D} = ${AUJ}) joueurs_auj,
+    count(*) filter (where type='victoire' and ${D} = ${AUJ}) victoires_auj
+  from public.avent_evenements) t),
+ 'serveur', (select row_to_json(t) from (select count(*) essais, count(*) filter (where classee) classes,
+    count(*) filter (where classee and fin is not null) classes_finis, count(*) filter (where not classee) libres,
+    count(*) filter (where fin is null) en_cours,
+    percentile_cont(0.5) within group (order by temps_ms) filter (where classee and fin is not null) mediane,
+    round(avg(indices) filter (where classee), 2) indices_moy,
+    (select count(*) from public.avent_joueurs) pseudos, (select count(*) from public.avent_joueurs where organisateur) organisateurs,
+    (select count(distinct appareil) from public.avent_scores) classes_appareils, (select count(*) from public.avent_scores) scores
+  from public.avent_parties) t),
+ 'jours', (select coalesce(json_agg(t order by t.d), '[]') from (
+    with ev as (select appareil, type, ${D} d from public.avent_evenements), prem as (select appareil, min(d) d0 from ev group by 1)
+    select e.d, count(distinct e.appareil) actifs, count(distinct e.appareil) filter (where p.d0 = e.d) nouveaux,
+      count(distinct e.appareil) filter (where p.d0 < e.d) revenus,
+      count(distinct e.appareil) filter (where type='visite') visiteurs, count(distinct e.appareil) filter (where type='debut') joueurs,
+      count(distinct e.appareil) filter (where type='victoire') finisseurs, count(*) filter (where type='debut') debuts,
+      count(*) filter (where type='victoire') victoires, count(*) filter (where type='abandon') abandons,
+      count(*) filter (where type='indice') indices, count(*) filter (where type='partage') partages
+    from ev e join prem p using (appareil) group by 1) t),
+ 'heures', (select coalesce(json_agg(t), '[]') from (select extract(hour from cree at time zone 'Africa/Porto-Novo')::int h, count(*) n from public.avent_evenements where type='debut' group by 1) t),
+ 'semaine', (select coalesce(json_agg(t), '[]') from (select extract(isodow from cree at time zone 'Africa/Porto-Novo')::int j, count(*) n from public.avent_evenements where type='debut' group by 1) t),
+ 'sources', (select coalesce(json_agg(t order by t.n desc), '[]') from (select coalesce(nullif(donnees->>'source', ''), 'direct') nom, count(distinct appareil) n from public.avent_evenements where type='visite' group by 1 order by 2 desc limit 8) t),
+ 'ecrans', (select coalesce(json_agg(t order by t.ordre), '[]') from (select case when w < 360 then 'moins de 360 px' when w < 400 then '360 à 399 px' when w < 480 then '400 à 479 px' when w < 900 then 'tablette' else 'ordinateur' end nom,
+      min(w) ordre, count(distinct appareil) n from (select appareil, nullif(split_part(donnees->>'ecran', 'x', 1), '')::int w from public.avent_evenements where type='visite') s where w is not null group by 1) t),
+ 'joueurs', (select coalesce(json_agg(t), '[]') from (
+    with ev as (select appareil, count(*) filter (where type='debut') parties, count(*) filter (where type='victoire') victoires,
+        count(*) filter (where type='abandon') abandons, count(*) filter (where type='indice') indices,
+        count(distinct ${D}) jours_actifs, min(cree) premier, max(cree) dernier, max((donnees->>'flamme')::int) flamme,
+        count(distinct jour) filter (where type='victoire' and jour > 0) grilles_finies, count(*) filter (where type='victoire' and jour = 0) entrainements
+      from public.avent_evenements group by 1),
+    sc as (select appareil, count(*) classees, round(avg(temps_ms)) moyenne, min(temps_ms) meilleur from public.avent_scores group by 1)
+    select ev.*, j.nom, coalesce(j.organisateur, false) organisateur, coalesce(sc.classees, 0) classees, sc.moyenne, sc.meilleur
+    from ev left join public.avent_joueurs j using (appareil) left join sc using (appareil) order by ev.dernier desc limit 3000) t),
+ 'cohortes', (select coalesce(json_agg(t), '[]') from (
+    with jours as (select appareil, ${D} d from public.avent_evenements group by 1, 2), prem as (select appareil, min(d) d0 from jours group by 1)
+    select p.d0, (j.d - p.d0) k, count(distinct j.appareil) n from prem p join jours j using (appareil) where j.d - p.d0 between 0 and 10 group by 1, 2) t),
+ 'grilles_ev', (select coalesce(json_agg(t), '[]') from (select jour, count(*) filter (where type='debut') debuts, count(*) filter (where type='victoire') victoires,
+      count(*) filter (where type='abandon') abandons, count(distinct appareil) filter (where type='victoire') finisseurs,
+      round(avg((donnees->>'erreurs')::numeric) filter (where type='victoire'), 1) erreurs, round(avg((donnees->>'avancee')::numeric) filter (where type='abandon')) avancee
+    from public.avent_evenements where jour > 0 group by 1) t),
+ 'grilles_srv', (select coalesce(json_agg(t), '[]') from (select jour, count(*) filter (where classee) essais, count(*) filter (where classee and fin is not null) finis,
+      count(*) filter (where not classee) libres, percentile_cont(0.5) within group (order by temps_ms) filter (where classee and fin is not null) mediane,
+      min(temps_ms) filter (where classee and fin is not null) meilleur, round(avg(indices) filter (where classee), 2) indices
+    from public.avent_parties group by 1) t),
+ 'abandon', (select coalesce(json_agg(t), '[]') from (select least(9, floor(coalesce((donnees->>'avancee')::numeric, 0) / 10))::int b, count(*) n from public.avent_evenements where type='abandon' group by 1) t),
+ 'entrainement', (select coalesce(json_agg(t), '[]') from (select (donnees->>'niveau')::int niveau, count(*) filter (where type='debut') debuts, count(*) filter (where type='victoire') victoires,
+      count(distinct appareil) filter (where type='victoire') finisseurs, percentile_cont(0.5) within group (order by (donnees->>'temps')::int) filter (where type='victoire') mediane,
+      round(avg((donnees->>'indices')::numeric) filter (where type='victoire'), 1) indices
+    from public.avent_evenements where jour = 0 and donnees ? 'niveau' group by 1) t),
+ 'avis', (select coalesce(json_agg(t order by t.cree desc), '[]') from (select id, nom, note, message, contexte, lu, cree from public.avent_avis order by cree desc limit 300) t),
+ 'grilles', (select coalesce(json_agg(t order by t.jour), '[]') from (select jour, grille, solution from public.avent_grilles) t)
+) r`;
+
+let DONNEES = null;
 async function charger() {
   $("etat").textContent = "Chargement…";
   try {
-    const vraies = await sql(`select jour, grille, solution from public.avent_grilles order by jour`);
-    if (vraies.length) NIVEAUX = [...ENTRAINEMENTS, ...vraies.map((r) => Object.assign({}, r.grille, { jour: n(r.jour), solution: r.solution }))];
-    const [tot, jours, sources, compo, cohortes, assid, flammes, grilles, joueurs, avis] = await Promise.all([
-      sql(`select count(distinct appareil) filter (where type='visite') visiteurs,
-             count(distinct appareil) filter (where type='debut') joueurs,
-             count(distinct appareil) filter (where type='victoire') finisseurs,
-             count(*) filter (where type='debut') parties, count(*) filter (where type='victoire') victoires,
-             count(*) filter (where type='abandon') abandons, count(*) filter (where type='indice') indices,
-             count(*) filter (where type='partage') partages, count(*) filter (where type='visite') visites,
-             count(distinct appareil) filter (where type='visite' and ${DATE} = (now() at time zone 'Africa/Porto-Novo')::date) visiteurs_auj,
-             count(distinct appareil) filter (where type='debut' and ${DATE} = (now() at time zone 'Africa/Porto-Novo')::date) joueurs_auj,
-             (select count(*) from public.avent_joueurs) pseudos
-           from public.avent_evenements`),
-      sql(`select ${DATE} d, count(distinct appareil) filter (where type='visite') visiteurs,
-             count(distinct appareil) filter (where type='debut') joueurs, count(distinct appareil) filter (where type='victoire') finisseurs,
-             count(*) filter (where type='victoire') victoires, count(*) filter (where type='abandon') abandons, count(*) filter (where type='partage') partages
-           from public.avent_evenements group by 1 order by 1`),
-      sql(`select coalesce(donnees->>'source','direct') source, count(distinct appareil) n from public.avent_evenements where type='visite' group by 1 order by 2 desc limit 8`),
-      sql(`select round(avg((donnees->>'indices')::numeric) filter (where type='victoire'),2) indices_moy,
-             round(avg((donnees->>'erreurs')::numeric) filter (where type='victoire'),1) erreurs_moy,
-             round(avg((donnees->>'retours')::numeric) filter (where type='victoire'),1) retours_moy,
-             count(*) filter (where type='victoire' and (donnees->>'indices')::int = 0) sans_indice,
-             count(*) filter (where type='victoire') victoires,
-             round(avg((donnees->>'avancee')::numeric) filter (where type='abandon')) avancee_abandon,
-             count(*) filter (where type='regle') regles, count(*) filter (where type='avis_ouvert') avis_ouverts
-           from public.avent_evenements`),
-      sql(`with jours as (select appareil, ${DATE} d from public.avent_evenements group by 1,2),
-             premier as (select appareil, min(d) d0 from jours group by 1)
-           select p.d0, count(distinct p.appareil) taille,
-             count(distinct p.appareil) filter (where j.d >= p.d0 + 1) j1,
-             count(distinct p.appareil) filter (where j.d >= p.d0 + 3) j3,
-             count(distinct p.appareil) filter (where j.d >= p.d0 + 7) j7
-           from premier p left join jours j on j.appareil = p.appareil group by 1 order by 1`),
-      sql(`select nb, count(*) appareils from (select appareil, count(distinct jour) nb from public.avent_evenements where type='victoire' and jour > 0 group by 1) t group by 1 order by 1`),
-      sql(`select f, count(*) appareils from (select appareil, max((donnees->>'flamme')::int) f from public.avent_evenements where type='victoire' group by 1) t where f > 0 group by 1 order by 1`),
-      sql(`select jour, count(*) filter (where type='debut') debuts, count(*) filter (where type='victoire') victoires,
-             count(*) filter (where type='abandon') abandons, count(distinct appareil) filter (where type='victoire') finisseurs,
-             percentile_cont(0.5) within group (order by (donnees->>'temps')::int) filter (where type='victoire') mediane,
-             min((donnees->>'temps')::int) filter (where type='victoire') meilleur,
-             round(avg((donnees->>'indices')::numeric) filter (where type='victoire'),1) indices,
-             round(avg((donnees->>'erreurs')::numeric) filter (where type='victoire'),1) erreurs,
-             round(avg((donnees->>'avancee')::numeric) filter (where type='abandon')) avancee
-           from public.avent_evenements where jour is not null group by 1`),
-      sql(`select j.nom, j.appareil, j.cree, j.organisateur, count(s.jour) grilles, min(s.temps_ms) meilleur from public.avent_joueurs j
-           left join public.avent_scores s on s.appareil = j.appareil group by 1,2,3,4 order by j.organisateur desc, grilles desc, j.cree limit 200`),
-      sql(`select id, nom, note, message, contexte, lu, cree from public.avent_avis order by cree desc limit 200`),
-    ]);
-    afficherEnsemble(tot[0] || {}, jours, sources, compo[0] || {});
-    afficherRetention(cohortes, assid, flammes);
-    afficherGrilles(grilles);
-    afficherJoueurs(joueurs);
-    afficherAvis(avis);
-    await chargerClassement();
+    const r = await sql(REQUETE);
+    DONNEES = r[0] ? (r[0].r || Object.values(r[0])[0]) : null;
+    if (typeof DONNEES === "string") DONNEES = JSON.parse(DONNEES);
+    if (!DONNEES) throw { code: "tool_error", message: "réponse vide" };
+    NIVEAUX = (DONNEES.grilles || []).map((g) => Object.assign({}, g.grille, { jour: n(g.jour), solution: g.solution }));
+    toutAfficher();
+    await chargerClassements();
     $("etat").textContent = "À jour : " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   } catch (e) {
     $("etat").textContent = e?.code === "absent" ? "Ouvre cette page sur claude.ai, avec ton connecteur Supabase." : messageErreur(e);
   }
 }
 $("actualiser").onclick = charger;
+function toutAfficher() {
+  if (!DONNEES) return;
+  const vues = { ensemble: afficherEnsemble, joueurs: afficherJoueurs, retention: afficherRetention, grilles: afficherGrilles, entrainement: afficherEntrainement, avis: afficherAvis };
+  afficherBadge();
+  if (vues[vueActive]) vues[vueActive]();        // on ne dessine que la section visible (les SVG cachés n'ont pas de largeur)
+}
+let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(toutAfficher, 150); });
+
+function tuile(valeur, libelle, detail, accent) { return el("div", { class: "tuile" + (accent ? " accent" : "") }, [el("b", { text: String(valeur) }), el("span", { text: libelle }), detail ? el("i", { text: detail }) : null]); }
 
 // ---------- vue d'ensemble ----------
-function tuile(valeur, libelle, detail) { return el("div", { class: "tuile" }, [el("b", { text: valeur }), el("span", { text: libelle }), detail ? el("i", { text: detail }) : null]); }
-function afficherEnsemble(t, jours, sources, c) {
+function afficherEnsemble() {
+  const t = DONNEES.tot || {}, s = DONNEES.serveur || {}, jours = DONNEES.jours;
+  const avis = DONNEES.avis, notes = avis.filter((a) => a.note);
   $("tuiles").replaceChildren(
-    tuile(n(t.visiteurs), "visiteurs (appareils)", `${n(t.visiteurs_auj)} aujourd'hui`),
-    tuile(n(t.joueurs), "ont commencé une grille", `${pct(t.joueurs, t.visiteurs)} des visiteurs · ${n(t.joueurs_auj)} aujourd'hui`),
-    tuile(n(t.finisseurs), "ont fini au moins une grille", pct(t.finisseurs, t.joueurs) + " des joueurs"),
-    tuile(n(t.victoires), "grilles terminées", `sur ${n(t.parties)} parties commencées`),
-    tuile(n(t.abandons), "abandons", pct(t.abandons, t.parties) + " des parties"),
-    tuile(n(t.pseudos), "pseudos au classement"),
-    tuile(n(t.partages), "partages"),
-    tuile(n(t.indices), "indices demandés"),
+    tuile(n(t.visiteurs), "visiteurs uniques", `${n(t.visiteurs_auj)} aujourd'hui · ${n(t.visites)} visites`, true),
+    tuile(n(t.joueurs), "ont commencé une partie", `${pct(t.joueurs, t.visiteurs)} des visiteurs · ${n(t.joueurs_auj)} aujourd'hui`, true),
+    tuile(n(t.finisseurs_jour), "ont fini une grille du jour", pct(t.finisseurs_jour, t.joueurs) + " des joueurs", true),
+    tuile(n(t.debuts), "parties commencées", "entraînement compris"),
+    tuile(n(t.victoires), "parties gagnées", `${pct(t.victoires, t.debuts)} des parties · ${n(t.victoires_auj)} aujourd'hui`),
+    tuile(n(t.abandons), "abandons", pct(t.abandons, t.debuts) + " des parties"),
+    tuile(n(s.classes), "premiers essais (classés)", `${n(s.classes_finis)} terminés · ${n(s.en_cours)} en cours`),
+    tuile(n(s.libres), "essais libres", "rejoués pour le plaisir"),
+    tuile(fmt(s.mediane), "temps médian", "premier essai, indices compris"),
+    tuile(n(t.indices), "indices demandés", `${s.indices_moy ?? "—"} par essai classé · ${pct(t.sans_indice, t.victoires)} sans indice`),
+    tuile(t.erreurs_moy ?? "—", "erreurs par victoire", `${t.retours_moy ?? "—"} retours en arrière`),
+    tuile(n(s.pseudos), "pseudos", `${n(s.classes_appareils)} au classement · ${n(s.scores)} scores`),
+    tuile(n(t.partages), "partages", `${n(t.regles)} lectures de la règle`),
+    tuile(notes.length ? (notes.reduce((a, x) => a + n(x.note), 0) / notes.length).toFixed(1) + " ★" : "—", "note moyenne", `${avis.length} avis · ${avis.filter((a) => !a.lu).length} non lus`),
   );
-  // le graphique : trois courbes sur la même échelle
-  const svg = $("graphe"); svg.replaceChildren();
-  const W = svg.clientWidth || 800, H = 220, m = { g: 34, d: 8, h: 10, b: 24 };
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  const NS = "http://www.w3.org/2000/svg", mk = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
-  if (!jours.length) { const tx = mk("text", { x: W / 2, y: H / 2, "text-anchor": "middle", fill: "#8fb3a2", "font-size": 13 }); tx.textContent = "Pas encore de données : elles arrivent dès les premières visites."; svg.append(tx); }
-  else {
-    const max = Math.max(1, ...jours.map((j) => n(j.visiteurs)));
-    const pasY = max <= 5 ? 1 : Math.ceil(max / 4);
-    const x = (i) => m.g + (jours.length === 1 ? (W - m.g - m.d) / 2 : i * (W - m.g - m.d) / (jours.length - 1));
-    const y = (v) => H - m.b - (H - m.b - m.h) * v / (Math.ceil(max / pasY) * pasY);
-    for (let v = 0; v <= Math.ceil(max / pasY) * pasY; v += pasY) {
-      svg.append(mk("line", { x1: m.g, x2: W - m.d, y1: y(v), y2: y(v), stroke: "#173f33" }));
-      const tx = mk("text", { x: m.g - 6, y: y(v) + 4, "text-anchor": "end", fill: "#5e7f70", "font-size": 11 }); tx.textContent = v; svg.append(tx);
-    }
-    for (const [cle, coul] of [["visiteurs", "#5e7f70"], ["joueurs", "#8c6fd8"], ["finisseurs", "#1ef2a0"]]) {
-      svg.append(mk("polyline", { points: jours.map((j, i) => `${x(i)},${y(n(j[cle]))}`).join(" "), fill: "none", stroke: coul, "stroke-width": 2, "stroke-linejoin": "round" }));
-      jours.forEach((j, i) => svg.append(mk("circle", { cx: x(i), cy: y(n(j[cle])), r: 3.5, fill: coul })));
-    }
-    const pasX = Math.max(1, Math.ceil(jours.length / 10));
-    jours.forEach((j, i) => { if (i % pasX === 0) { const tx = mk("text", { x: x(i), y: H - 6, "text-anchor": "middle", fill: "#5e7f70", "font-size": 11 }); tx.textContent = String(j.d).slice(5).split("-").reverse().join("/"); svg.append(tx); } });
-  }
-  $("t-jours").replaceChildren(el("tr", {}, ["Date", "Visiteurs", "Joueurs", "Ont fini", "Grilles finies", "Abandons", "Partages"].map((h, i) => el("th", { class: i ? "n" : "", text: h }))),
-    ...jours.slice().reverse().map((j) => el("tr", {}, [el("td", { text: String(j.d).split("-").reverse().join("/") }),
-      ...["visiteurs", "joueurs", "finisseurs", "victoires", "abandons", "partages"].map((k) => el("td", { class: "n", text: n(j[k]) }))])));
-  barres($("sources"), sources.map((s) => [s.source, n(s.n)]), "Pas encore de visite.");
-  barres($("comportement"), [
-    ["indices", c.indices_moy ?? "—", "par grille finie (moyenne)"], ["erreurs", c.erreurs_moy ?? "—", "mouvements refusés par grille finie"],
-    ["retours", c.retours_moy ?? "—", "pas en arrière par grille finie"], ["sans indice", pct(c.sans_indice, c.victoires), "des grilles finies"],
-    ["abandon à", c.avancee_abandon != null ? c.avancee_abandon + " %" : "—", "de la grille, en moyenne"],
-    ["règle lue", n(c.regles), "fois"], ["avis ouverts", n(c.avis_ouverts), "fois"],
-  ].map(([a, b, d]) => [a, b, d]), "", true);
+  courbes($("g-jours"), jours, [{ cle: "visiteurs", couleur: C.bleu, nom: "visiteurs", aire: true }, { cle: "joueurs", couleur: C.violet, nom: "joueurs" }, { cle: "finisseurs", couleur: C.vert, nom: "ont fini" }],
+    { libelle: (d) => dateFr(d.d), vide: "Pas encore de visite : les courbes arrivent avec les premiers joueurs." });
+  barresV($("g-nouveaux"), jours, [{ cle: "nouveaux", couleur: C.or, nom: "nouveaux" }, { cle: "revenus", couleur: C.vert, nom: "revenus" }], { libelle: (d) => dateFr(d.d) });
+  const heures = Array.from({ length: 24 }, (_, h) => ({ x: h + " h", n: n((DONNEES.heures.find((x) => n(x.h) === h) || {}).n) }));
+  barresV($("g-heures"), heures, [{ cle: "n", couleur: C.violet, nom: "parties" }], { libelle: (d) => d.x.replace(" h", "") });
+  const JS = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
+  barresV($("g-semaine"), JS.map((j, i) => ({ x: j, n: n((DONNEES.semaine.find((x) => n(x.j) === i + 1) || {}).n) })), [{ cle: "n", couleur: C.bleu, nom: "parties" }]);
+  barresH($("g-sources"), DONNEES.sources.map((x) => ({ nom: x.nom, v: x.n })), { couleur: C.bleu, vide: "Pas encore de visite." });
+  barresH($("g-ecrans"), DONNEES.ecrans.map((x) => ({ nom: x.nom, v: x.n })), { couleur: C.violet, vide: "Pas encore de visite." });
+  const etapes = [["ont visité le jeu", n(t.visiteurs)], ["ont commencé une partie", n(t.joueurs)], ["ont gagné une partie", n(t.finisseurs)],
+    ["ont fini une grille du jour", n(t.finisseurs_jour)], ["ont choisi un pseudo", n(s.pseudos)], ["sont au classement", n(s.classes_appareils)]];
+  const base = Math.max(1, etapes[0][1]);
+  $("entonnoir").replaceChildren(...etapes.map(([nom, v]) => el("div", { class: "etape" }, [el("span", { text: nom }),
+    el("div", { class: "piste" }, el("i", { style: `width:${v ? Math.max(2, 100 * v / base) : 0}%` })),
+    el("span", { class: "val" }, [String(v), el("small", { text: pct(v, etapes[0][1]) })])])));
+  $("t-jours").replaceChildren(el("tr", {}, ["Date", "Actifs", "Nouveaux", "Revenus", "Visiteurs", "Joueurs", "Ont fini", "Parties", "Gagnées", "Abandons", "Indices", "Partages"].map((h, i) => el("th", { class: i ? "n" : "", text: h }))),
+    ...(jours.length ? jours.slice().reverse().map((j) => el("tr", {}, [el("td", { text: String(j.d).split("-").reverse().join("/") }),
+      ...["actifs", "nouveaux", "revenus", "visiteurs", "joueurs", "finisseurs", "debuts", "victoires", "abandons", "indices", "partages"].map((k) => el("td", { class: "n", text: n(j[k]) }))]))
+      : [el("tr", {}, el("td", { colspan: 12, class: "vide", text: "Pas encore de données." }))]));
 }
-function barres(boite, data, videTexte, texte) {
-  if (!data.length) { boite.replaceChildren(el("p", { class: "vide", text: videTexte })); return; }
-  const max = Math.max(1, ...data.map((d) => Number(d[1]) || 0));
-  boite.replaceChildren(...data.map(([nom, v, detail]) => texte
-    ? el("div", { class: "barre", style: "grid-template-columns:110px 1fr" }, [el("span", { text: nom }), el("span", {}, [el("b", { text: String(v) + " " }), el("span", { class: "note", text: detail })])])
-    : el("div", { class: "barre" }, [el("span", { text: nom }), el("div", { class: "fond" }, el("i", { style: `width:${100 * v / max}%` })), el("span", { class: "n", text: v, style: "text-align:right" })])));
+
+// ---------- joueurs ----------
+function mediane(arr) { if (!arr.length) return "—"; const s = arr.slice().sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+function histogramme(svg, valeurs, bornes, couleur, unite) {
+  const seaux = bornes.map(([a, b, nom]) => ({ x: nom, n: valeurs.filter((v) => v >= a && v <= b).length }));
+  barresV(svg, seaux, [{ cle: "n", couleur, nom: "appareils" }], { detail: (d) => `${d.n} appareil${d.n > 1 ? "s" : ""}<br>${echappe(d.x)} ${unite}`, vide: "Pas encore de joueur." });
 }
+function afficherJoueurs() {
+  const J = DONNEES.joueurs, actifs = J.filter((j) => n(j.parties) > 0);
+  const moy = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+  const revenus = J.filter((j) => n(j.jours_actifs) >= 2).length;
+  $("tuiles-joueurs").replaceChildren(
+    tuile(J.length, "appareils venus", `${actifs.length} ont joué`, true),
+    tuile(moy(actifs.map((j) => n(j.parties))).toFixed(1), "parties par joueur", `médiane ${mediane(actifs.map((j) => n(j.parties)))}`),
+    tuile(moy(actifs.map((j) => n(j.victoires))).toFixed(1), "victoires par joueur"),
+    tuile(moy(J.map((j) => n(j.jours_actifs))).toFixed(1), "jours de visite par appareil"),
+    tuile(revenus, "revenus un autre jour", pct(revenus, J.length) + " des appareils"),
+    tuile(Math.max(0, ...J.map((j) => n(j.flamme))), "plus longue flamme"),
+  );
+  histogramme($("g-parties"), actifs.map((j) => n(j.parties)), [[1, 1, "1"], [2, 2, "2"], [3, 3, "3"], [4, 5, "4-5"], [6, 10, "6-10"], [11, 20, "11-20"], [21, 1e9, "21+"]], C.violet, "parties");
+  histogramme($("g-finies"), J.map((j) => n(j.grilles_finies)), [[0, 0, "0"], [1, 1, "1"], [2, 3, "2-3"], [4, 7, "4-7"], [8, 14, "8-14"], [15, 23, "15-23"], [24, 24, "24"]], C.vert, "grilles du jour finies");
+  histogramme($("g-jours-actifs"), J.map((j) => n(j.jours_actifs)), [[1, 1, "1"], [2, 2, "2"], [3, 4, "3-4"], [5, 7, "5-7"], [8, 14, "8-14"], [15, 1e9, "15+"]], C.or, "jours");
+  tableJoueurs();
+}
+function tableJoueurs() {
+  if (!DONNEES) return;
+  const filtre = $("filtre-joueurs").value.trim().toLowerCase(), tri = $("tri-joueurs").value;
+  let J = DONNEES.joueurs.filter((j) => !filtre || (j.nom || "").toLowerCase().includes(filtre));
+  J = J.slice().sort((a, b) => tri === "dernier" ? String(b.dernier).localeCompare(String(a.dernier)) : n(b[tri]) - n(a[tri]));
+  $("t-tous-joueurs").replaceChildren(el("tr", {}, ["Joueur", "Premier passage", "Dernier passage", "Jours", "Parties", "Gagnées", "Abandons", "Grilles finies", "Classées", "Temps moyen", "Meilleur", "Indices", "Entraîn.", "Flamme"].map((h, i) => el("th", { class: i > 2 ? "n" : "", text: h }))),
+    ...(J.length ? J.slice(0, 500).map((j) => el("tr", {}, [
+      el("td", {}, j.nom ? el("span", { class: "pseudo", text: j.nom + (j.organisateur ? " · orga" : "") }) : el("span", { class: "anonyme", text: "anonyme " + String(j.appareil).slice(0, 4) })),
+      el("td", { text: quand(j.premier) }), el("td", { text: quand(j.dernier) }),
+      ...[n(j.jours_actifs), n(j.parties), n(j.victoires), n(j.abandons), n(j.grilles_finies), n(j.classees)].map((v) => el("td", { class: "n", text: v })),
+      el("td", { class: "n", text: fmt(j.moyenne) }), el("td", { class: "n", text: fmt(j.meilleur) }),
+      el("td", { class: "n", text: n(j.indices) }), el("td", { class: "n", text: n(j.entrainements) }), el("td", { class: "n", text: n(j.flamme) }),
+    ])) : [el("tr", {}, el("td", { colspan: 14, class: "vide", text: filtre ? "Aucun pseudo ne correspond." : "Pas encore de joueur." }))]));
+}
+$("filtre-joueurs").addEventListener("input", tableJoueurs);
+$("tri-joueurs").addEventListener("change", tableJoueurs);
 
 // ---------- rétention ----------
-function afficherRetention(coh, assid, flammes) {
-  $("t-cohortes").replaceChildren(el("tr", {}, ["Première visite", "Appareils", "Revenus après 1 j", "après 3 j", "après 7 j"].map((h, i) => el("th", { class: i ? "n" : "", text: h }))),
-    ...(coh.length ? coh.slice().reverse().map((c) => el("tr", {}, [el("td", { text: String(c.d0).split("-").reverse().join("/") }), el("td", { class: "n", text: n(c.taille) }),
-      el("td", { class: "n", text: pct(c.j1, c.taille) }), el("td", { class: "n", text: pct(c.j3, c.taille) }), el("td", { class: "n", text: pct(c.j7, c.taille) })]))
-      : [el("tr", {}, el("td", { colspan: 5, class: "vide", text: "Pas encore de visiteurs." }))]));
-  barres($("assiduite"), assid.map((a) => [`${a.nb} grille${a.nb > 1 ? "s" : ""}`, n(a.appareils)]), "Personne n'a encore fini de grille.");
-  barres($("flammes"), flammes.map((f) => [`flamme ${f.f}`, n(f.appareils)]), "Pas encore de flamme.");
+function afficherRetention() {
+  const coh = DONNEES.cohortes, J = DONNEES.joueurs, parJour = {};
+  for (const c of coh) (parJour[c.d0] ??= {})[n(c.k)] = n(c.n);
+  const cohortes = Object.keys(parJour).sort();
+  const auj = new Date(Date.now() + 3600e3).toISOString().slice(0, 10);
+  const age = (d) => Math.round((Date.parse(auj) - Date.parse(d)) / 864e5);
+  const courbe = [];
+  for (let k = 1; k <= 10; k++) {
+    let base = 0, rev = 0;
+    for (const d of cohortes) if (age(d) >= k) { base += parJour[d][0] || 0; rev += parJour[d][k] || 0; }
+    if (base) courbe.push({ x: "J+" + k, v: Math.round(100 * rev / base) });
+  }
+  courbes($("g-courbe-retention"), courbe, [{ cle: "v", couleur: C.vert, nom: "revenus", aire: true, suffixe: " %" }], { vide: "Il faut au moins deux jours de données pour mesurer le retour." });
+  const j1 = courbe.find((c) => c.x === "J+1"), j7 = courbe.find((c) => c.x === "J+7");
+  $("tuiles-retention").replaceChildren(
+    tuile(j1 ? j1.v + " %" : "—", "reviennent le lendemain", "J+1, toutes cohortes", true),
+    tuile(j7 ? j7.v + " %" : "—", "reviennent une semaine après", "J+7"),
+    tuile(J.filter((j) => n(j.flamme) >= 3).length, "ont une flamme de 3 ou plus"),
+    tuile(J.filter((j) => n(j.flamme) >= 7).length, "ont une flamme de 7 ou plus"),
+  );
+  const fl = {}; for (const j of J) if (n(j.flamme) > 0) fl[n(j.flamme)] = (fl[n(j.flamme)] || 0) + 1;
+  barresV($("g-flammes"), Object.keys(fl).map(Number).sort((a, b) => a - b).map((f) => ({ x: String(f), n: fl[f] })), [{ cle: "n", couleur: C.or, nom: "appareils" }], { detail: (d) => `${d.n} appareil(s)<br>flamme de ${d.x}`, vide: "Pas encore de flamme." });
+  const K = 7;
+  $("t-cohortes").replaceChildren(el("tr", {}, ["Première visite", "Appareils", ...Array.from({ length: K }, (_, k) => "J+" + (k + 1))].map((h, i) => el("th", { class: i ? "n" : "", text: h }))),
+    ...(cohortes.length ? cohortes.slice().reverse().map((d) => {
+      const base = parJour[d][0] || 0;
+      return el("tr", {}, [el("td", { text: String(d).split("-").reverse().join("/") }), el("td", { class: "n", text: base }),
+        ...Array.from({ length: K }, (_, k) => {
+          if (age(d) < k + 1) return el("td", { class: "c", text: "" });
+          const p = base ? (parJour[d][k + 1] || 0) / base : 0;
+          return el("td", { class: "c", text: Math.round(100 * p) + " %", style: `background: rgba(30, 242, 160, ${(0.06 + p * 0.7).toFixed(2)}); color: ${p > .5 ? "#04150d" : "#d3efe2"}` });
+        })]);
+    }) : [el("tr", {}, el("td", { colspan: K + 2, class: "vide", text: "Pas encore de visiteurs." }))]));
 }
 
-// ---------- les 24 grilles ----------
+// ---------- les grilles ----------
 const COUL = { tourne: "#ff5a5f", droit: "#ffce5c" };
 function dessinerGrille(c, niv, solution) {
-  const r = c.getBoundingClientRect(), dpr = devicePixelRatio || 1, T = r.width || 220;
+  const r = c.getBoundingClientRect(), dpr = devicePixelRatio || 1, T = r.width || 200;
   c.width = T * dpr; c.height = T * dpr;
   const g = c.getContext("2d"); g.scale(dpr, dpr);
   const pas = (T * 0.92) / Math.max(niv.w, niv.h), ox = (T - pas * niv.w) / 2, oy = (T - pas * niv.h) / 2;
   const ctr = (p) => [ox + (p[0] + .5) * pas, oy + (p[1] + .5) * pas];
   for (const [x, y] of niv.cases) { g.fillStyle = "#16303a"; g.fillRect(ox + x * pas + 1.5, oy + y * pas + 1.5, pas - 3, pas - 3); }
-  for (const k of Object.keys(niv.bloques)) { const [x, y] = k.split(",").map(Number); g.fillStyle = niv.bloques[k] === "cadeau" ? "#8c6fd8" : "#1a8f5c"; g.fillRect(ox + x * pas + pas * .25, oy + y * pas + pas * .25, pas * .5, pas * .5); }
-  if (solution) { g.strokeStyle = "#3fbf86"; g.lineWidth = Math.max(2, pas * .12); g.lineJoin = g.lineCap = "round"; g.beginPath(); niv.solution.forEach((p, i) => { const [x, y] = ctr(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); }
-  for (const [k, s] of Object.entries(niv.boules)) { const [x, y] = ctr(k.split(",").map(Number)); g.fillStyle = COUL[s]; g.beginPath(); g.arc(x, y, pas * .26, 0, 7); g.fill(); }
+  for (const k of Object.keys(niv.bloques || {})) { const [x, y] = k.split(",").map(Number); g.fillStyle = niv.bloques[k] === "cadeau" ? "#8c6fd8" : "#1a8f5c"; g.fillRect(ox + x * pas + pas * .25, oy + y * pas + pas * .25, pas * .5, pas * .5); }
+  if (solution && niv.solution) { g.strokeStyle = "#3fbf86"; g.lineWidth = Math.max(2, pas * .12); g.lineJoin = g.lineCap = "round"; g.beginPath(); niv.solution.forEach((p, i) => { const [x, y] = ctr(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); }
+  for (const [k, s] of Object.entries(niv.boules || {})) { const [x, y] = ctr(k.split(",").map(Number)); g.fillStyle = COUL[s]; g.beginPath(); g.arc(x, y, pas * .26, 0, 7); g.fill(); }
   const [dx, dy] = ctr(niv.depart); g.fillStyle = "#ffce5c"; g.beginPath(); g.arc(dx, dy, pas * .32, 0, 7); g.fill();
   g.fillStyle = "#3a2405"; g.beginPath(); [[.15,-.75],[-.4,.1],[-.02,.1],[-.2,.75],[.42,-.15],[.04,-.15]].forEach(([a,b],i) => { const X = dx + a * pas * .3, Y = dy + b * pas * .3; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.fill();
   const [ax, ay] = ctr(niv.arrivee); g.fillStyle = "#ffe08a"; g.beginPath();
   for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? pas * .15 : pas * .34; g.lineTo(ax + rr * Math.cos(a), ay + rr * Math.sin(a)); } g.fill();
 }
-let statsGrilles = [];
-function afficherGrilles(stats) {
-  statsGrilles = stats;
-  const voir = $("voir-solutions").checked;
-  $("grilles").replaceChildren(...NIVEAUX.map((niv) => {
-    const s = niv.jour ? (stats.find((x) => n(x.jour) === niv.jour) || {}) : {};
-    const debuts = n(s.debuts), taux = debuts ? n(s.victoires) / debuts : null;
-    const pill = debuts < 3 ? el("span", { class: "pill", text: "peu de parties" }) : taux >= .6 ? el("span", { class: "pill ok", text: "réussie " + pct(s.victoires, debuts) }) : taux >= .3 ? el("span", { class: "pill or", text: "difficile " + pct(s.victoires, debuts) }) : el("span", { class: "pill alerte", text: "trop dure ? " + pct(s.victoires, debuts) });
-    const c = el("canvas", { "aria-label": `Grille du jour ${niv.jour}` });
-    const carte = el("div", { class: "grille" }, [
-      el("div", { class: "titre" }, [el("b", { text: niv.jour ? `Jour ${niv.jour}` : `Entraînement ${niv.niveau}` }), el("span", { class: "pill", text: "★".repeat(niv.etoiles) })]),
-      el("span", { class: "note", text: `${niv.titre} · ${niv.w}×${niv.h} · ${Object.keys(niv.boules).length} boules · ${Object.keys(niv.bloques).length} cases interdites` }),
-      c, pill,
-      el("div", { class: "chiffres" }, [
-        el("span", { text: `parties : ${debuts}` }), el("span", { text: `finies : ${n(s.victoires)}` }),
-        el("span", { text: `abandons : ${n(s.abandons)}` }), el("span", { text: `joueurs : ${n(s.finisseurs)}` }),
-        el("span", { text: `médiane : ${fmt(s.mediane)}` }), el("span", { text: `meilleur : ${fmt(s.meilleur)}` }),
-        el("span", { text: `indices : ${s.indices ?? "—"}` }), el("span", { text: `erreurs : ${s.erreurs ?? "—"}` }),
-        el("span", { text: `abandon à : ${s.avancee != null ? s.avancee + " %" : "—"}` }),
-      ]),
-    ]);
-    requestAnimationFrame(() => dessinerGrille(c, niv, voir));
-    return carte;
-  }));
+function carteGrille(niv, chiffres, pill) {
+  const c = el("canvas", { "aria-label": niv.jour ? `Grille du jour ${niv.jour}` : `Entraînement ${niv.niveau}` });
+  const carte = el("div", { class: "grille" }, [
+    el("div", { class: "titre" }, [el("b", { text: niv.jour ? `Jour ${niv.jour}` : `Niveau ${niv.niveau}` }), el("span", { class: "pill or", text: "★".repeat(niv.etoiles) })]),
+    el("span", { class: "note", text: `${niv.titre} · ${niv.w}×${niv.h} · ${Object.keys(niv.boules || {}).length} boules · ${Object.keys(niv.bloques || {}).length} interdites` }),
+    c, pill, el("div", { class: "chiffres" }, chiffres.map((t) => el("span", { text: t }))),
+  ]);
+  requestAnimationFrame(() => dessinerGrille(c, niv, $("voir-solutions").checked));
+  return carte;
 }
-$("voir-solutions").onchange = () => afficherGrilles(statsGrilles);
-afficherGrilles([]);
+function afficherGrilles() {
+  const ev = DONNEES.grilles_ev, srv = DONNEES.grilles_srv;
+  const parJour = Array.from({ length: 24 }, (_, i) => {
+    const j = i + 1, e = ev.find((x) => n(x.jour) === j) || {}, s = srv.find((x) => n(x.jour) === j) || {};
+    return { x: String(j), jour: j, essais: n(s.essais), finis: n(s.finis), libres: n(s.libres), reussite: n(s.essais) ? Math.round(100 * n(s.finis) / n(s.essais)) : 0,
+      mediane: s.mediane != null ? n(s.mediane) / 1000 : 0, meilleur: s.meilleur, indices: n(s.indices), abandons: n(e.abandons), erreurs: e.erreurs, finisseurs: n(e.finisseurs) };
+  });
+  barresV($("g-reussite"), parJour, [{ cle: "reussite", couleur: C.vert, nom: "réussite" }], { format: (v) => v + " %", detail: (d) => `${d.reussite} % réussis<br>${d.finis} terminés sur ${d.essais} premiers essais<br>${d.libres} essais libres`, vide: "Aucune grille jouée pour l'instant." });
+  barresV($("g-temps"), parJour, [{ cle: "mediane", couleur: C.violet, nom: "médiane" }], { format: (v) => fmt(v * 1000), detail: (d) => `médiane ${fmt(d.mediane * 1000)}<br>meilleur ${fmt(d.meilleur)}`, vide: "Aucun essai terminé pour l'instant." });
+  barresV($("g-indices"), parJour, [{ cle: "indices", couleur: C.or, nom: "indices par essai" }], { format: (v) => (Math.round(v * 10) / 10).toString().replace(".", ","), vide: "Aucun indice pour l'instant." });
+  const ab = Array.from({ length: 10 }, (_, b) => ({ x: `${b * 10} à ${b * 10 + 9} %`, court: b * 10 + "%", n: n((DONNEES.abandon.find((x) => n(x.b) === b) || {}).n) }));
+  barresV($("g-abandon"), ab, [{ cle: "n", couleur: C.rouge, nom: "abandons" }], { libelle: (d) => d.court, detail: (d) => `${d.n} abandon(s)<br>à ${echappe(d.x)} de la grille`, vide: "Aucun abandon pour l'instant." });
+  $("grilles").replaceChildren(...(NIVEAUX.length ? NIVEAUX.map((niv) => {
+    const d = parJour[niv.jour - 1] || {};
+    const pill = d.essais < 3 ? el("span", { class: "pill", text: "peu de parties" }) : d.reussite >= 60 ? el("span", { class: "pill ok", text: "réussie " + d.reussite + " %" }) : d.reussite >= 30 ? el("span", { class: "pill or", text: "difficile " + d.reussite + " %" }) : el("span", { class: "pill alerte", text: "trop dure ? " + d.reussite + " %" });
+    return carteGrille(niv, [`1ers essais : ${d.essais}`, `terminés : ${d.finis}`, `essais libres : ${d.libres}`, `abandons : ${d.abandons}`, `médiane : ${fmt(d.mediane * 1000)}`, `meilleur : ${fmt(d.meilleur)}`,
+      `indices : ${d.indices || "—"}`, `erreurs : ${d.erreurs ?? "—"}`], pill);
+  }) : [el("p", { class: "vide", text: "Les grilles se chargent depuis la base." })]));
+}
+$("voir-solutions").onchange = () => { if (vueActive === "grilles") afficherGrilles(); };
 
-// ---------- classement et modération ----------
+// ---------- entraînement ----------
+function afficherEntrainement() {
+  const E = DONNEES.entrainement;
+  const L = ENTRAINEMENTS.map((niv) => { const e = E.find((x) => n(x.niveau) === niv.niveau) || {};
+    return { x: niv.titre, niv, debuts: n(e.debuts), victoires: n(e.victoires), reste: Math.max(0, n(e.debuts) - n(e.victoires)), finisseurs: n(e.finisseurs), mediane: e.mediane, indices: e.indices }; });
+  barresV($("g-entrainement"), L, [{ cle: "victoires", couleur: C.vert, nom: "finies" }, { cle: "reste", couleur: C.violet, nom: "non finies" }],
+    { detail: (d) => `${d.debuts} commencées · ${d.victoires} finies (${pct(d.victoires, d.debuts)})<br>médiane ${fmt(d.mediane)}`, vide: "Personne ne s'est encore entraîné." });
+  $("t-entrainement").replaceChildren(el("tr", {}, ["Niveau", "Commencées", "Finies", "Réussite", "Joueurs", "Médiane", "Indices"].map((h, i) => el("th", { class: i ? "n" : "", text: h }))),
+    ...L.map((l) => el("tr", {}, [el("td", { text: l.x }), ...[l.debuts, l.victoires, pct(l.victoires, l.debuts), l.finisseurs, fmt(l.mediane), l.indices ?? "—"].map((v) => el("td", { class: "n", text: v }))])));
+  $("grilles-entrainement").replaceChildren(...L.map((l) => carteGrille(l.niv, [`commencées : ${l.debuts}`, `finies : ${l.victoires}`, `médiane : ${fmt(l.mediane)}`, `joueurs : ${l.finisseurs}`], el("span", { class: "pill", text: l.niv.titre }))));
+}
+
+// ---------- classements et modération ----------
 $("choix-jour").replaceChildren(...Array.from({ length: 24 }, (_, i) => el("option", { value: i + 1, text: `Jour ${i + 1}` })));
-$("choix-jour").onchange = chargerClassement;
+$("choix-jour").onchange = chargerClassements;
 function boutonConfirme(libelle, question, action) {
   const b = el("button", { class: "btn danger", text: libelle });
   b.onclick = () => {
@@ -378,52 +699,60 @@ function boutonConfirme(libelle, question, action) {
   };
   return b;
 }
-async function chargerClassement() {
+async function chargerClassements() {
   const jour = Number($("choix-jour").value || 1);
-  let rang;
-  try { rang = await sql(`select nom, temps_ms, appareil, maj from public.avent_scores where jour = ${jour} order by temps_ms, maj limit 100`); }
-  catch (e) { return; }
+  let r;
+  try {
+    const rep = await sql(`select json_build_object(
+      'jour', (select coalesce(json_agg(t), '[]') from (select s.nom, s.temps_ms, s.appareil, s.maj from public.avent_scores s
+         where s.jour = ${jour} and not exists (select 1 from public.avent_joueurs j where j.appareil = s.appareil and j.organisateur) order by s.temps_ms, s.maj limit 100) t),
+      'general', (select coalesce(json_agg(t), '[]') from (select rang, nom, grilles, moyenne_ms from public.avent_classement_general('00000000-0000-4000-8000-000000000000') where rang <= 10) t),
+      'pseudos', (select coalesce(json_agg(t order by t.organisateur desc, t.grilles desc, t.cree), '[]') from (select j.nom, j.appareil, j.cree, j.organisateur, count(s.jour) grilles, min(s.temps_ms) meilleur
+         from public.avent_joueurs j left join public.avent_scores s on s.appareil = j.appareil group by 1, 2, 3, 4) t)) r`);
+    r = rep[0] ? (rep[0].r || Object.values(rep[0])[0]) : null;
+    if (typeof r === "string") r = JSON.parse(r);
+  } catch (e) { return; }
+  if (!r) return;
   $("t-classement").replaceChildren(el("tr", {}, ["#", "Pseudo", "Temps", "Le", ""].map((h) => el("th", { text: h }))),
-    ...(rang.length ? rang.map((r, i) => el("tr", {}, [el("td", { text: i + 1 }), el("td", { text: r.nom }), el("td", { text: fmt(r.temps_ms) }),
-      el("td", { text: new Date(r.maj).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) }),
-      el("td", {}, boutonConfirme("Retirer", "Effacer ce score ?", () => sql(`delete from public.avent_scores where jour = ${jour} and appareil = ${uuid(r.appareil)}`)))]))
+    ...(r.jour.length ? r.jour.map((x, i) => el("tr", {}, [el("td", { text: i + 1 }), el("td", { class: "pseudo", text: x.nom }), el("td", { text: fmt(x.temps_ms) }), el("td", { text: quand(x.maj) }),
+      el("td", {}, boutonConfirme("Retirer", "Effacer ce score ?", () => sql(`delete from public.avent_scores where jour = ${jour} and appareil = ${uuid(x.appareil)}`)))]))
       : [el("tr", {}, el("td", { colspan: 5, class: "vide", text: "Personne au classement de cette grille pour l'instant." }))]));
-}
-function afficherJoueurs(j) {
-  $("t-joueurs").replaceChildren(el("tr", {}, ["Pseudo", "Inscrit le", "Grilles classées", "Meilleur temps", ""].map((h) => el("th", { text: h }))),
-    ...(j.length ? j.map((r) => {
-      const orga = r.organisateur === true || r.organisateur === "true";
-      // « organisateur » : c'est toi. Tu ouvres toutes les grilles en avance (avec #apercu), et tu n'es jamais classé.
+  $("t-general").replaceChildren(el("tr", {}, ["#", "Pseudo", "Grilles", "Temps moyen"].map((h, i) => el("th", { class: i > 1 ? "n" : "", text: h }))),
+    ...(r.general.length ? r.general.map((x) => el("tr", {}, [el("td", { text: x.rang }), el("td", { class: "pseudo", text: x.nom }), el("td", { class: "n", text: x.grilles }), el("td", { class: "n", text: fmt(x.moyenne_ms) })]))
+      : [el("tr", {}, el("td", { colspan: 4, class: "vide", text: "Personne au classement général pour l'instant." }))]));
+  $("t-pseudos").replaceChildren(el("tr", {}, ["Pseudo", "Choisi le", "Grilles classées", "Meilleur temps", ""].map((h) => el("th", { text: h }))),
+    ...(r.pseudos.length ? r.pseudos.map((x) => {
+      const orga = x.organisateur === true || x.organisateur === "true";
       const bOrga = el("button", { class: "btn", text: orga ? "Retirer organisateur" : "C'est moi (organisateur)" });
       bOrga.onclick = async () => { bOrga.disabled = true; try {
-        await sql(`update public.avent_joueurs set organisateur = ${orga ? "false" : "true"} where appareil = ${uuid(r.appareil)};` + (orga ? "" : ` delete from public.avent_scores where appareil = ${uuid(r.appareil)};`));
+        await sql(`update public.avent_joueurs set organisateur = ${orga ? "false" : "true"} where appareil = ${uuid(x.appareil)};` + (orga ? "" : ` delete from public.avent_scores where appareil = ${uuid(x.appareil)};`));
         toast(orga ? "Ce pseudo est de nouveau classé." : "Organisateur : hors classement, toutes les grilles ouvertes."); await charger();
       } catch (e) { toast(messageErreur(e)); bOrga.disabled = false; } };
-      return el("tr", {}, [el("td", { text: r.nom + (orga ? " · organisateur" : "") }), el("td", { text: new Date(r.cree).toLocaleDateString("fr-FR") }), el("td", { class: "n", text: n(r.grilles) }), el("td", { text: fmt(r.meilleur) }),
-        el("td", {}, [bOrga, " ", boutonConfirme("Bannir le pseudo", "Effacer ce pseudo et ses scores ?", () => sql(`delete from public.avent_scores where appareil = ${uuid(r.appareil)}; delete from public.avent_joueurs where appareil = ${uuid(r.appareil)};`))])]);
-    })
-      : [el("tr", {}, el("td", { colspan: 5, class: "vide", text: "Aucun pseudo pour l'instant." }))]));
+      return el("tr", {}, [el("td", { class: "pseudo", text: x.nom + (orga ? " · organisateur" : "") }), el("td", { text: quand(x.cree) }), el("td", { text: n(x.grilles) }), el("td", { text: fmt(x.meilleur) }),
+        el("td", {}, el("div", { class: "outils" }, [bOrga, boutonConfirme("Bannir", "Effacer ce pseudo et ses scores ?", () => sql(`delete from public.avent_scores where appareil = ${uuid(x.appareil)}; delete from public.avent_joueurs where appareil = ${uuid(x.appareil)};`))]))]);
+    }) : [el("tr", {}, el("td", { colspan: 5, class: "vide", text: "Aucun pseudo pour l'instant." }))]));
 }
 
 // ---------- avis ----------
-function afficherAvis(avis) {
-  const notes = avis.filter((a) => a.note), moy = notes.length ? (notes.reduce((s, a) => s + n(a.note), 0) / notes.length).toFixed(1) : "—";
+function afficherBadge() { const k = DONNEES.avis.filter((a) => !a.lu).length; $("badge-avis").hidden = !k; $("badge-avis").textContent = k; }
+function afficherAvis() {
+  const avis = DONNEES.avis, notes = avis.filter((a) => a.note), moy = notes.length ? (notes.reduce((s, a) => s + n(a.note), 0) / notes.length).toFixed(1) : "—";
   const nonlus = avis.filter((a) => !a.lu).length;
-  $("badge-avis").textContent = nonlus ? `(${nonlus})` : "";
-  $("tuiles-avis").replaceChildren(tuile(avis.length, "avis reçus"), tuile(moy, "note moyenne sur 5", `${notes.length} notes`), tuile(nonlus, "non lus"));
+  $("tuiles-avis").replaceChildren(tuile(avis.length, "avis reçus", null, true), tuile(moy, "note moyenne sur 5", `${notes.length} notes`), tuile(nonlus, "non lus"), tuile(avis.filter((a) => a.message).length, "avec un message"));
+  barresV($("g-notes"), [1, 2, 3, 4, 5].map((k) => ({ x: k + " ★", n: notes.filter((a) => n(a.note) === k).length })), [{ cle: "n", couleur: C.or, nom: "avis" }], { vide: "Pas encore de note." });
   $("liste-avis").replaceChildren(...(avis.length ? avis.map((a) => {
     const lu = el("button", { class: "btn", text: a.lu ? "Marquer non lu" : "Marquer lu" });
     lu.onclick = async () => { try { await sql(`update public.avent_avis set lu = ${a.lu ? "false" : "true"} where id = ${Number(a.id)}`); await charger(); } catch (e) { toast(messageErreur(e)); } };
     const ctx = a.contexte || {};
     return el("div", { class: "un-avis" + (a.lu ? "" : " nonlu") }, [
-      el("div", { class: "rangee" }, [el("span", {}, [el("span", { class: "etoiles", text: a.note ? "★".repeat(a.note) + "☆".repeat(5 - a.note) : "" }), " ", el("b", { text: a.nom || "anonyme" })]),
-        el("span", { class: "note", text: new Date(a.cree).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) })]),
+      el("div", { class: "rangee" }, [el("span", {}, [el("span", { class: "etoiles", text: a.note ? "★".repeat(a.note) + "☆".repeat(5 - a.note) : "" }), " ", el("b", { text: a.nom || "anonyme" })]), el("span", { class: "note", text: quand(a.cree) })]),
       a.message ? el("p", { text: a.message }) : null,
       el("span", { class: "note", text: [ctx.grille != null ? `grille ${ctx.grille}` : "", ctx.ecran ? `écran ${ctx.ecran}` : "", ctx.records != null ? `${ctx.records} grilles finies` : ""].filter(Boolean).join(" · ") }),
-      el("div", { style: "display:flex;gap:8px" }, [lu, boutonConfirme("Supprimer", "Supprimer cet avis ?", () => sql(`delete from public.avent_avis where id = ${Number(a.id)}`))]),
+      el("div", { class: "outils" }, [lu, boutonConfirme("Supprimer", "Supprimer cet avis ?", () => sql(`delete from public.avent_avis where id = ${Number(a.id)}`))]),
     ]);
   }) : [el("p", { class: "vide", text: "Pas encore d'avis : le bouton « Donner mon avis » est sur l'accueil et le calendrier du jeu." })]));
 }
 
+try { const v = localStorage.getItem("admin-vue"); if (v && TITRES[v]) ouvrir(v); } catch (e) {}
 charger();
 </script>
