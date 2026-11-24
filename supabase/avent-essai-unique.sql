@@ -80,7 +80,7 @@ begin
     raise exception 'numéro';                       -- un numéro de téléphone serait visible par tous
   end if;
   if v_nom !~ '^[[:alnum:]À-ÖØ-öø-ÿ][[:alnum:]À-ÖØ-öø-ÿ .''-]{0,15}$'
-     or v_cle ~ '(merde|connard|connasse|salope|pute|encul|batard|nique|tapette|nazi|hitler|lutin|admin|simeon)'
+     or v_cle ~ '(merde|connard|connasse|salope|pute|encul|batard|nique|tapette|nazi|hitler|lutin|admin)'
      or v_cle ~ '\m(fdp|ntm|pd|bot)\M' then
     raise exception 'nom refusé';
   end if;
