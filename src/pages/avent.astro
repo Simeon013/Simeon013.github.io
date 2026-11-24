@@ -676,11 +676,14 @@ async function appel(fonction, corps) {
   if (!r.ok) throw new Error((d && d.message) || "erreur");
   return d;
 }
+let horsDelai = false;                               // grille d'un jour passé : classements fermés le lendemain à 6 h
 async function envoyerTemps() {
+  horsDelai = false;
   if (!niv.jour || !memoire.nom || !memoire.records[niv.jour]) return;
   try {
     await appel("avent_envoyer", { p_jour: niv.jour, p_appareil: appareil(), p_nom: memoire.nom, p_temps_ms: memoire.records[niv.jour] });
   } catch (e) {
+    if (e.message === "hors délai") horsDelai = true;
     if (e.message === "nom refusé" || e.message === "nom pris") {
       memoire.nom = ""; ecrire(memoire);
       $("f-nom").hidden = false; $("nom").value = "";
@@ -754,6 +757,7 @@ async function afficherClassement() {
   $("note-classement").textContent = horsLigne ? "Classement indisponible pour le moment (pas de connexion ?) : ton temps est gardé sur ton téléphone."
     : !niv.jour ? "L'entraînement ne compte pas au classement. Les lutins sont les personnages du jeu : ils te donnent un temps à battre."
     : APERCU ? "Mode aperçu : les temps ne sont pas envoyés au classement."
+    : horsDelai ? "Le classement de cette grille est fermé (il se ferme le lendemain à 6 h) : ton temps reste sur ton téléphone."
     : (joueurs < 5 ? "Les lutins sont les personnages du jeu : ils te donnent un temps à battre." : `${joueurs} joueurs sur cette grille.`);
 }
 
