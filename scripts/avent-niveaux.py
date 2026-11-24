@@ -4,11 +4,20 @@
 
 Règle du jeu : un seul fil, de l'éclair à l'étoile, qui passe par toutes les cases ; sur une boule rouge le fil
 tourne, sur une boule dorée il va tout droit ; on ne passe pas sur les cadeaux ni les sapins.
-Chaque grille part d'un chemin tiré au hasard (graine fixe, donc toujours les mêmes grilles), on y place toutes
+Chaque grille part d'un chemin tiré au hasard, on y place toutes
 les boules qu'il implique, puis on en retire tant que la solution reste unique (vérifié par une recherche
 exhaustive) ; quelques boules retirées sont remises pour adoucir la grille (« en_plus »). Grille 0 : l'entraînement.
 Sans dépendance : Python 3 suffit.
+
+Sécurité : les grilles 1 à 24 et leurs solutions sont SECRÈTES. Le tirage utilise une graine aléatoire jamais
+enregistrée, et le fichier complet est écrit hors du dépôt (chemin donné en argument) ; il est ensuite chargé dans
+la table privée public.avent_grilles (voir supabase/avent-securite.sql), d'où le jeu reçoit chaque grille, sans sa
+solution, seulement le jour où elle s'ouvre. Le dépôt ne garde que src/data/avent-niveaux.json : l'entraînement
+complet (grille 0, publique) et, pour les autres jours, le titre et la taille.
+
+    python3 scripts/avent-niveaux.py /chemin/hors/du/depot/avent-grilles-secretes.json
 """
+import os
 import json
 import random
 import sys
@@ -159,12 +168,16 @@ PLAN = [
 
 
 def main():
+    if len(sys.argv) != 2 or Path(sys.argv[1]).resolve().is_relative_to(Path(__file__).resolve().parent.parent):
+        sys.exit("usage : python3 scripts/avent-niveaux.py /chemin/HORS/du/depot/grilles.json")
+    sel = int.from_bytes(os.urandom(8), "big")          # graine secrète, jamais enregistrée (la grille 0 reste fixe)
     niveaux = []
     for jour, titre, regle, n, depart, en_plus, nb_bloq, etoiles in PLAN:
         for essai in range(30):                     # si les cadeaux rendent la grille impossible, on les replace
-            bloq = bloqueurs(n, nb_bloq, 1000 * (essai + 1) + jour, depart) if nb_bloq else {}
+            g = 0 if jour == 0 else sel
+            bloq = bloqueurs(n, nb_bloq, g + 1000 * (essai + 1) + jour, depart) if nb_bloq else {}
             try:
-                ch, boules = fabriquer(carre(n, bloq), depart, 7 + jour * 13 + essai, en_plus, sans_boules=(en_plus == 0), minimum={5: 6, 6: 9, 7: 12}.get(n, 0))
+                ch, boules = fabriquer(carre(n, bloq), depart, g + 7 + jour * 13 + essai, en_plus, sans_boules=(en_plus == 0), minimum={5: 6, 6: 9, 7: 12}.get(n, 0))
                 break
             except RuntimeError:
                 continue
@@ -174,12 +187,16 @@ def main():
     # le 24 : la grille dessine un sapin, la prise au pied
     lignes = [(2, 4), (2, 4), (1, 5), (1, 5), (0, 6), (0, 6), (3, 3)]
     sapin = [(x, y) for y, (a, b) in enumerate(lignes) for x in range(a, b + 1)]
-    ch, boules = fabriquer(sapin, (3, 6), 24, 5)
+    ch, boules = fabriquer(sapin, (3, 6), sel + 24, 5)
     niveaux.append(niveau(24, "Le sapin de Noël", "Le grand soir : la grille dessine un sapin, la prise est au pied.", 7, 7, sapin, ch, boules, {}, 5))
     print(f"jour 24 : sapin, {len(boules)} boules")
+    secret = Path(sys.argv[1])
+    secret.write_text(json.dumps(niveaux, ensure_ascii=False, separators=(",", ":")) + "\n")
+    public = [n if n["jour"] == 0 else {k: n[k] for k in ("jour", "titre", "w", "h", "etoiles")} for n in niveaux]
     sortie = Path(__file__).resolve().parent.parent / "src" / "data" / "avent-niveaux.json"
-    sortie.write_text(json.dumps(niveaux, ensure_ascii=False, separators=(",", ":")) + "\n")
-    print(sortie)
+    sortie.write_text(json.dumps(public, ensure_ascii=False, separators=(",", ":")) + "\n")
+    print(secret, "(secret, hors du dépôt)")
+    print(sortie, "(public : entraînement + titres)")
 
 
 def niveau(jour, titre, regle, w, h, cases, ch, boules, bloq, etoiles):

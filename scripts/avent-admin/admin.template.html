@@ -140,7 +140,9 @@ td.n, th.n { text-align: right; }
 <div class="toast" id="toast" hidden></div>
 
 <script>
-const NIVEAUX = __NIVEAUX__;
+// l'entraînement est public ; les 24 vraies grilles et leurs solutions sont lues dans la table privée avent_grilles
+const ENTRAINEMENT = __ENTRAINEMENT__;
+let NIVEAUX = [ENTRAINEMENT];
 const PROJET = "ujithhyzbfuyabogulzs";
 const $ = (id) => document.getElementById(id);
 const el = (tag, attrs = {}, enfants = []) => {
@@ -193,6 +195,8 @@ try { const o = localStorage.getItem("admin-onglet"); if (o) document.querySelec
 async function charger() {
   $("etat").textContent = "Chargement…";
   try {
+    const vraies = await sql(`select jour, grille, solution from public.avent_grilles order by jour`);
+    if (vraies.length) NIVEAUX = [ENTRAINEMENT, ...vraies.map((r) => Object.assign({}, r.grille, { jour: n(r.jour), solution: r.solution }))];
     const [tot, jours, sources, compo, cohortes, assid, flammes, grilles, joueurs, avis] = await Promise.all([
       sql(`select count(distinct appareil) filter (where type='visite') visiteurs,
              count(distinct appareil) filter (where type='debut') joueurs,
@@ -234,8 +238,8 @@ async function charger() {
              round(avg((donnees->>'erreurs')::numeric) filter (where type='victoire'),1) erreurs,
              round(avg((donnees->>'avancee')::numeric) filter (where type='abandon')) avancee
            from public.avent_evenements where jour is not null group by 1`),
-      sql(`select j.nom, j.appareil, j.cree, count(s.jour) grilles, min(s.temps_ms) meilleur from public.avent_joueurs j
-           left join public.avent_scores s on s.appareil = j.appareil group by 1,2,3 order by grilles desc, j.cree limit 200`),
+      sql(`select j.nom, j.appareil, j.cree, j.organisateur, count(s.jour) grilles, min(s.temps_ms) meilleur from public.avent_joueurs j
+           left join public.avent_scores s on s.appareil = j.appareil group by 1,2,3,4 order by j.organisateur desc, grilles desc, j.cree limit 200`),
       sql(`select id, nom, note, message, contexte, lu, cree from public.avent_avis order by cree desc limit 200`),
     ]);
     afficherEnsemble(tot[0] || {}, jours, sources, compo[0] || {});
@@ -361,7 +365,7 @@ $("voir-solutions").onchange = () => afficherGrilles(statsGrilles);
 afficherGrilles([]);
 
 // ---------- classement et modération ----------
-$("choix-jour").replaceChildren(...NIVEAUX.filter((x) => x.jour).map((x) => el("option", { value: x.jour, text: `Jour ${x.jour}` })));
+$("choix-jour").replaceChildren(...Array.from({ length: 24 }, (_, i) => el("option", { value: i + 1, text: `Jour ${i + 1}` })));
 $("choix-jour").onchange = chargerClassement;
 function boutonConfirme(libelle, question, action) {
   const b = el("button", { class: "btn danger", text: libelle });
@@ -387,8 +391,17 @@ async function chargerClassement() {
 }
 function afficherJoueurs(j) {
   $("t-joueurs").replaceChildren(el("tr", {}, ["Pseudo", "Inscrit le", "Grilles classées", "Meilleur temps", ""].map((h) => el("th", { text: h }))),
-    ...(j.length ? j.map((r) => el("tr", {}, [el("td", { text: r.nom }), el("td", { text: new Date(r.cree).toLocaleDateString("fr-FR") }), el("td", { class: "n", text: n(r.grilles) }), el("td", { text: fmt(r.meilleur) }),
-      el("td", {}, boutonConfirme("Bannir le pseudo", "Effacer ce pseudo et ses scores ?", () => sql(`delete from public.avent_scores where appareil = ${uuid(r.appareil)}; delete from public.avent_joueurs where appareil = ${uuid(r.appareil)};`)))]))
+    ...(j.length ? j.map((r) => {
+      const orga = r.organisateur === true || r.organisateur === "true";
+      // « organisateur » : c'est toi. Tu ouvres toutes les grilles en avance (avec #apercu), et tu n'es jamais classé.
+      const bOrga = el("button", { class: "btn", text: orga ? "Retirer organisateur" : "C'est moi (organisateur)" });
+      bOrga.onclick = async () => { bOrga.disabled = true; try {
+        await sql(`update public.avent_joueurs set organisateur = ${orga ? "false" : "true"} where appareil = ${uuid(r.appareil)};` + (orga ? "" : ` delete from public.avent_scores where appareil = ${uuid(r.appareil)};`));
+        toast(orga ? "Ce pseudo est de nouveau classé." : "Organisateur : hors classement, toutes les grilles ouvertes."); await charger();
+      } catch (e) { toast(messageErreur(e)); bOrga.disabled = false; } };
+      return el("tr", {}, [el("td", { text: r.nom + (orga ? " · organisateur" : "") }), el("td", { text: new Date(r.cree).toLocaleDateString("fr-FR") }), el("td", { class: "n", text: n(r.grilles) }), el("td", { text: fmt(r.meilleur) }),
+        el("td", {}, [bOrga, " ", boutonConfirme("Bannir le pseudo", "Effacer ce pseudo et ses scores ?", () => sql(`delete from public.avent_scores where appareil = ${uuid(r.appareil)}; delete from public.avent_joueurs where appareil = ${uuid(r.appareil)};`))])]);
+    })
       : [el("tr", {}, el("td", { colspan: 5, class: "vide", text: "Aucun pseudo pour l'instant." }))]));
 }
 

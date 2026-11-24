@@ -282,6 +282,8 @@ import '@fontsource/chakra-petch/700.css';
 <script>
 // @ts-nocheck : le jeu est écrit en JavaScript simple (canvas, Web Audio), sans types.
 
+// Le dépôt ne contient que l'entraînement complet et, pour les autres jours, le titre et la taille : chaque grille
+// arrive du serveur le jour où elle s'ouvre, sans sa solution (voir supabase/avent-securite.sql).
 import NIVEAUX from "../data/avent-niveaux.json";
 const COULEURS = ["#ff6b6b", "#ffce5c", "#1ef2a0", "#5abedc", "#8c6fd8", "#ff7896"];
 const $ = (id) => document.getElementById(id);
@@ -294,7 +296,7 @@ let memoire = Object.assign({ nom: "", records: {}, jourMeme: {} }, lire());
 // ---------- le calendrier : le jour J s'ouvre le J décembre à minuit, heure de Cotonou (UTC+1) ----------
 const ANNEE = 2026;
 function maintenantCotonou() { return new Date(Date.now() + 3600 * 1000); }      // lu avec getUTC* : l'heure de Cotonou
-const APERCU = location.hash === "#apercu";     // pour tester toutes les grilles avant leur jour (le classement, lui, refusera les temps)
+const APERCU = location.hash === "#apercu";     // pour l'organisateur : le calendrier montre tous les jours (le serveur ne donne les grilles en avance qu'à son appareil)
 function jourDuJour() {
   if (APERCU) return 25;
   const d = maintenantCotonou();
@@ -368,10 +370,36 @@ function preparerAccueil() {
 // ---------- le jeu ----------
 const cle = (p) => p[0] + "," + p[1];
 let indicesPris = 0, erreurs = 0, retours = 0, debutSignale = false;
+let partie = null, partieFinie = null;            // la partie côté serveur : c'est lui qui tient le chrono officiel
 let niv, cases, chemin, debut, fini, penalite, indiceCase, indiceFin, minuteur, taille, pas, ox, oy, glisse = false, dernier = null, celebration = 0;
 
-function lancer(jour) {
-  niv = NIVEAUX.find((n) => n.jour === jour);
+const grillesOuvertes = {};                        // le temps de la visite seulement
+async function lancer(jour) {
+  let n = NIVEAUX.find((x) => x.jour === jour);
+  if (jour > 0) {
+    let g = grillesOuvertes[jour];
+    if (!g) {
+      try { g = await appel("avent_grille", { p_jour: jour, p_appareil: appareil() }); }
+      catch (e) {
+        alert(e.message === "grille fermée" ? "Cette grille n'est pas encore ouverte." : "Impossible d'ouvrir la grille : vérifie ta connexion et réessaie.");
+        return;
+      }
+      if (!g) { alert("Grille introuvable."); return; }
+      grillesOuvertes[jour] = g;
+    }
+    n = Object.assign({}, n, g, { jour });
+  }
+  demarrer(n);
+}
+
+function assurerPartie() {
+  if (niv.jour > 0 && !partie) partie = appel("avent_commencer", { p_jour: niv.jour, p_appareil: appareil() }).catch(() => null);
+  return partie;
+}
+
+function demarrer(n) {
+  niv = n;
+  partie = null; partieFinie = null;
   cases = new Set(niv.cases.map(cle));
   chemin = [niv.depart];
   signalerAbandon();
@@ -440,7 +468,7 @@ function essayer(p) {
     message(boule === "tourne" ? "Sur la boule rouge, le fil doit tourner." : "Sur la boule dorée, le fil doit aller tout droit.", true);
     erreurs++; son.erreur(); vibrer(30); return;
   }
-  if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); }
+  if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); assurerPartie(); }
   if (!debutSignale) { debutSignale = true; stat("debut", niv.jour, { rejoue: !!memoire.records[niv.jour] }); }
   chemin.push(p);
   indiceCase = null;
@@ -610,17 +638,31 @@ requestAnimationFrame(boucle);
 
 // ---------- boutons ----------
 $("b-annuler").onclick = () => { if (!fini && chemin.length > 1) { chemin.pop(); son.retour(); apresCoup(); } };
-$("b-recommencer").onclick = () => { clearInterval(minuteur); lancer(niv.jour); };
+$("b-recommencer").onclick = () => { clearInterval(minuteur); demarrer(niv); };
 function majIndices() { $("b-indice").innerHTML = 'Indice<br><small style="opacity:.7">+5&nbsp;s</small>'; }
-$("b-indice").onclick = () => {
-  if (fini) return;
+let indiceEnCours = false;
+$("b-indice").onclick = async () => {
+  if (fini || indiceEnCours) return;
+  if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); }
+  let r;
+  if (niv.jour === 0) {                            // l'entraînement connaît sa solution : il ne compte pas
+    let k = 0;
+    while (k < chemin.length && meme(chemin[k], niv.solution[k])) k++;
+    r = k === chemin.length ? { case: niv.solution[k], retour: false } : { case: niv.solution[k - 1], retour: true };
+  } else {                                         // les vraies grilles : le serveur donne l'indice et compte les 5 s
+    indiceEnCours = true;
+    try {
+      const id = await assurerPartie();
+      if (!id) throw new Error("hors ligne");
+      r = await appel("avent_indice", { p_partie: id, p_appareil: appareil(), p_chemin: chemin });
+    } catch (e) { message("Indice indisponible pour le moment (connexion ?).", true); return; }
+    finally { indiceEnCours = false; }
+  }
   indicesPris++;
   stat("indice", niv.jour, { n: indicesPris, avancee: Math.round(100 * (chemin.length - 1) / (cases.size - 1)) });
-  let k = 0;
-  while (k < chemin.length && meme(chemin[k], niv.solution[k])) k++;
-  penalite += 5000; if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); }
-  if (k === chemin.length) { indiceCase = niv.solution[k]; message("La case suivante clignote (+5 s)."); }
-  else { indiceCase = niv.solution[k - 1]; message("Reviens jusqu'à la case qui clignote, puis repars (+5 s)."); }
+  penalite += 5000;
+  indiceCase = r.case;
+  message(r.retour ? "Reviens jusqu'à la case qui clignote, puis repars (+5 s)." : "La case suivante clignote (+5 s).");
   indiceFin = performance.now() + 2600; majChrono();
 };
 function ouvrirRegle() { $("f-regle").hidden = false; $("regle-ok").focus(); stat("regle", niv ? niv.jour : null, {}); }
@@ -632,9 +674,12 @@ $("jeu-retour").onclick = () => { clearInterval(minuteur); signalerAbandon(); mo
 window.addEventListener("resize", () => { if (!$("ecran-jeu").hidden) redimensionner(); });
 
 // ---------- victoire et classement de démonstration ----------
-function gagner() {
+async function gagner() {
   fini = performance.now(); celebration = fini; clearInterval(minuteur); majChrono();
-  const t = tempsEcoule(), ancien = memoire.records[niv.jour];
+  const t = tempsEcoule();
+  const ancien = memoire.records[niv.jour];
+  // le temps officiel : le serveur vérifie le fil et mesure lui-même la durée de la partie
+  const officiel = niv.jour > 0 ? terminerPartie() : Promise.resolve(null);
   const nouveau = !ancien || t < ancien;
   if (nouveau) memoire.records[niv.jour] = Math.round(t);
   if (niv.jour && niv.jour === jourDuJour()) memoire.jourMeme[niv.jour] = true;      // la flamme : fini le jour même
@@ -651,7 +696,13 @@ function gagner() {
     $("vic-detail").textContent = nouveau ? (ancien ? `Nouveau record ! (avant : ${fmt(ancien)})` : "Premier temps enregistré sur cet appareil.") : `Ton record reste ${fmt(ancien)}.`;
     $("nom").value = memoire.nom || "";
     $("f-nom").hidden = !!memoire.nom;
-    envoyerTemps().then(afficherClassement);
+    officiel.then((r) => {
+      if (r && r.temps_ms) {
+        $("vic-temps").textContent = fmt(r.temps_ms);
+        memoire.records[niv.jour] = Math.round(Math.min(r.temps_ms, ancien || Infinity)); ecrire(memoire);
+      }
+      afficherClassement();
+    });
     const suivant = NIVEAUX.find((n) => n.jour > niv.jour && n.jour > 0 && ouvert(n.jour));
     $("vic-suivant").hidden = !suivant;
     if (suivant) $("vic-suivant").onclick = () => { $("f-victoire").hidden = true; lancer(suivant.jour); };
@@ -676,20 +727,30 @@ async function appel(fonction, corps) {
   if (!r.ok) throw new Error((d && d.message) || "erreur");
   return d;
 }
-let horsDelai = false;                               // grille d'un jour passé : classements fermés le lendemain à 6 h
-async function envoyerTemps() {
-  horsDelai = false;
-  if (!niv.jour || !memoire.nom || !memoire.records[niv.jour]) return;
-  try {
-    await appel("avent_envoyer", { p_jour: niv.jour, p_appareil: appareil(), p_nom: memoire.nom, p_temps_ms: memoire.records[niv.jour] });
-  } catch (e) {
-    if (e.message === "hors délai") horsDelai = true;
-    if (e.message === "nom refusé" || e.message === "nom pris") {
-      memoire.nom = ""; ecrire(memoire);
-      $("f-nom").hidden = false; $("nom").value = "";
-      $("nom").placeholder = e.message === "nom pris" ? "Ce pseudo est déjà pris : choisis-en un autre" : "Ce pseudo n'est pas accepté : choisis-en un autre";
-    }
+let horsDelai = false, organisateur = false;       // grille d'un jour passé : classement fermé le lendemain à 6 h
+function raisonNonClasse(r) {
+  horsDelai = r && r.raison === "hors délai";
+  organisateur = r && r.raison === "organisateur";
+  if (r && (r.raison === "nom pris" || r.raison === "nom refusé")) {
+    memoire.nom = ""; ecrire(memoire);
+    $("f-nom").hidden = false; $("nom").value = "";
+    $("nom").placeholder = r.raison === "nom pris" ? "Ce pseudo est déjà pris : choisis-en un autre" : "Ce pseudo n'est pas accepté : choisis-en un autre";
   }
+}
+async function terminerPartie() {
+  horsDelai = organisateur = false;
+  try {
+    const id = await partie;
+    if (!id) return null;
+    const r = await appel("avent_terminer", { p_partie: id, p_appareil: appareil(), p_chemin: chemin, p_nom: memoire.nom || null });
+    partieFinie = id;
+    raisonNonClasse(r);
+    return r;
+  } catch (e) { return null; }
+}
+async function classerPartie() {                     // le pseudo choisi après la victoire : on classe la partie déjà vérifiée
+  if (!partieFinie || !memoire.nom) return;
+  try { raisonNonClasse(await appel("avent_classer", { p_partie: partieFinie, p_appareil: appareil(), p_nom: memoire.nom })); } catch (e) {}
 }
 // statistiques anonymes : un identifiant d'appareil tiré au hasard, le type d'événement, la grille, quelques chiffres
 function stat(type, jour, donnees) {
@@ -758,6 +819,7 @@ async function afficherClassement() {
     : !niv.jour ? "L'entraînement ne compte pas au classement. Les lutins sont les personnages du jeu : ils te donnent un temps à battre."
     : APERCU ? "Mode aperçu : les temps ne sont pas envoyés au classement."
     : horsDelai ? "Le classement de cette grille est fermé (il se ferme le lendemain à 6 h) : ton temps reste sur ton téléphone."
+    : organisateur ? "Organisateur : tes temps ne comptent pas au classement."
     : (joueurs < 5 ? "Les lutins sont les personnages du jeu : ils te donnent un temps à battre." : `${joueurs} joueurs sur cette grille.`);
 }
 
@@ -794,10 +856,10 @@ $("f-nom").addEventListener("submit", async (e) => {
   bouton.disabled = false;
   ecrire(memoire);
   $("f-nom").hidden = true;
-  await envoyerTemps();
+  await classerPartie();
   afficherClassement();
 });
-$("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; lancer(niv.jour); };
+$("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; demarrer(niv); };
 $("vic-partager").onclick = async () => {
   const texte = `</Avent> · ${niv.jour ? "jour " + niv.jour : "entraînement"} : guirlande allumée en ${$("vic-temps").textContent}` + (indicesPris ? "" : " sans indice") +
     (flamme() ? ` · flamme ${flamme()}` : "") + ". Tu fais mieux ?";
