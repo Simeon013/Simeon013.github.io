@@ -139,3 +139,20 @@ grant execute on function public.avent_choisir_nom(uuid, text) to anon;
 grant execute on function public.avent_envoyer(int, uuid, text, int) to anon;
 grant execute on function public.avent_evenement(uuid, text, int, jsonb) to anon;
 grant execute on function public.avent_donner_avis(uuid, int, text, jsonb) to anon;
+
+-- 4. Le classement général : d'abord le nombre de grilles terminées, puis le temps moyen ---------------------------
+create or replace function public.avent_classement_general(p_appareil uuid)
+returns table (rang bigint, nom text, grilles bigint, moyenne_ms int, moi boolean, joueurs bigint)
+language sql stable security definer set search_path = public as $$
+  with parjoueur as (
+    select s.appareil, max(s.nom) nom, count(*) grilles, round(avg(s.temps_ms))::int moyenne_ms, max(s.maj) derniere
+    from public.avent_scores s group by s.appareil
+  ), classe as (
+    select rank() over (order by grilles desc, moyenne_ms, derniere) rang, nom, grilles, moyenne_ms,
+           appareil = p_appareil moi, count(*) over () joueurs
+    from parjoueur
+  )
+  select rang, nom, grilles, moyenne_ms, moi, joueurs from classe where rang <= 10 or moi order by rang limit 11;
+$$;
+revoke all on function public.avent_classement_general(uuid) from public;
+grant execute on function public.avent_classement_general(uuid) to anon;

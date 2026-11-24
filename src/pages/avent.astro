@@ -43,6 +43,11 @@ import '@fontsource/chakra-petch/700.css';
     </div>
     <h2 style="font-size:28px;color:#fff">Mon Avent</h2>
     <div class="jours" id="jours"></div>
+    <div class="carte" id="carte-general" style="display:grid;gap:8px">
+      <h3 style="font-size:18px;color:#fff">Classement général</h3>
+      <p class="pied" style="margin:0">D'abord le nombre de grilles terminées, puis le temps moyen.</p>
+      <ol class="classement" id="classement-general"></ol>
+    </div>
     <button class="lien-avis" data-avis>Donner mon avis sur le jeu</button>
     <p class="pied">Une case s'ouvre chaque jour à minuit, heure de Cotonou. Les grilles passées restent jouables ; la flamme monte quand tu termines la grille du jour le jour même.</p>
   </section>
@@ -316,7 +321,7 @@ function montrer(nom) {
   for (const e of ["accueil", "calendrier", "jeu"]) $("ecran-" + e).hidden = e !== nom;
   document.querySelector(".avent .app").classList.toggle("en-jeu", nom === "jeu");
   $("cal-flamme").textContent = $("jeu-flamme").textContent = flamme();
-  if (nom === "calendrier") dessinerCalendrier();
+  if (nom === "calendrier") { dessinerCalendrier(); afficherGeneral(); }
   if (nom === "accueil") preparerAccueil();
   window.scrollTo(0, 0);
 }
@@ -750,6 +755,19 @@ async function afficherClassement() {
     : !niv.jour ? "L'entraînement ne compte pas au classement. Les lutins sont les personnages du jeu : ils te donnent un temps à battre."
     : APERCU ? "Mode aperçu : les temps ne sont pas envoyés au classement."
     : (joueurs < 5 ? "Les lutins sont les personnages du jeu : ils te donnent un temps à battre." : `${joueurs} joueurs sur cette grille.`);
+}
+
+async function afficherGeneral() {
+  const liste = $("classement-general");
+  if (APERCU) { liste.innerHTML = '<li><span></span><span>Mode aperçu : pas de classement.</span><span></span></li>'; return; }
+  try {
+    const d = await appel("avent_classement_general", { p_appareil: appareil() });
+    liste.innerHTML = d.length ? d.map((l) =>
+      `<li class="${l.moi ? "moi" : ""}"><span>${l.rang}</span><span>${propre(l.nom)}${l.moi ? " (toi)" : ""}</span><span>${l.grilles} gr. · ${fmt(l.moyenne_ms)}</span></li>`).join("")
+      : '<li><span></span><span>Personne encore : sois le premier !</span><span></span></li>';
+  } catch (e) {
+    liste.innerHTML = '<li><span></span><span>Classement indisponible pour le moment.</span><span></span></li>';
+  }
 }
 
 $("f-nom").addEventListener("submit", async (e) => {
