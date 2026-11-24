@@ -48,6 +48,7 @@ import '@fontsource/chakra-petch/700.css';
       <p class="pied" style="margin:0">D'abord le nombre de grilles terminées, puis le temps moyen.</p>
       <ol class="classement" id="classement-general"></ol>
     </div>
+    <button class="btn" id="cal-entrainement">S'entraîner</button>
     <button class="lien-avis" data-avis>Donner mon avis sur le jeu</button>
     <p class="pied">Une case s'ouvre chaque jour à minuit, heure de Cotonou. Les grilles passées restent jouables ; la flamme monte quand tu termines la grille du jour le jour même.</p>
   </section>
@@ -99,6 +100,16 @@ import '@fontsource/chakra-petch/700.css';
   </div>
 </div>
 
+
+<!-- ENTRAÎNEMENT -->
+<div class="voile" id="f-entrainement" hidden>
+  <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="ent-titre">
+    <h3 id="ent-titre">S'entraîner</h3>
+    <p style="margin:0;color:var(--doux)">Des grilles rien que pour s'entraîner, de la plus simple à la plus dure. Elles ne comptent pas au classement.</p>
+    <div class="choix-entrainement" id="choix-entrainement"></div>
+    <button class="btn" id="ent-fermer">Fermer</button>
+  </div>
+</div>
 
 <!-- AVIS -->
 <div class="voile" id="f-avis" hidden>
@@ -233,6 +244,13 @@ import '@fontsource/chakra-petch/700.css';
 .avent .nom { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .avent .nom input { min-width: 0; border-radius: 10px; border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); padding: 10px 12px; font: inherit; }
 .avent .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.avent .choix-entrainement { display: grid; gap: 8px; }
+.avent .choix-entrainement button { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; text-align: left; padding: 12px 14px;
+  border-radius: 12px; border: 1px solid var(--ligne); background: var(--surface-2); color: var(--texte); font: inherit; cursor: pointer; }
+.avent .choix-entrainement button:hover { border-color: var(--or); }
+.avent .choix-entrainement b { color: #fff; font-size: 16px; }
+.avent .choix-entrainement .etoiles-mini { color: var(--or); letter-spacing: 1px; font-size: 13px; }
+.avent .choix-entrainement small { grid-column: 1 / -1; color: var(--doux); font-size: 12px; }
 .avent .deux:has(#vic-suivant[hidden]) { grid-template-columns: 1fr; }
 @media (prefers-reduced-motion: reduce) { .avent .jauge i { transition: none; } }
 
@@ -373,8 +391,26 @@ let indicesPris = 0, erreurs = 0, retours = 0, debutSignale = false;
 let partie = null, partieFinie = null;            // la partie côté serveur : c'est lui qui tient le chrono officiel
 let niv, cases, chemin, debut, fini, penalite, indiceCase, indiceFin, minuteur, taille, pas, ox, oy, glisse = false, dernier = null, celebration = 0;
 
+const ENTRAINEMENTS = NIVEAUX.filter((n) => n.jour === 0);    // publics, avec leur solution : ils ne comptent pas
+const cleRecord = (n) => n.jour || "e" + n.niveau;
+const nomGrille = (n) => n.jour ? `Jour ${n.jour} · ${n.titre}` : `Entraînement · ${n.titre}`;
+function choisirEntrainement() {
+  $("choix-entrainement").replaceChildren(...ENTRAINEMENTS.map((n) => {
+    const b = document.createElement("button");
+    const rec = memoire.records[cleRecord(n)];
+    b.innerHTML = `<b></b><span class="etoiles-mini">${"★".repeat(n.etoiles)}<span style="opacity:.25">${"★".repeat(5 - n.etoiles)}</span></span><small></small>`;
+    b.querySelector("b").textContent = n.titre;
+    b.querySelector("small").textContent = `${n.w} × ${n.h}` + (Object.keys(n.boules).length ? " · boules" : "") + (Object.keys(n.bloques).length ? " · cadeaux" : "") + (rec ? ` · ton record ${fmt(rec)}` : "");
+    b.onclick = () => { $("f-entrainement").hidden = true; demarrer(n); };
+    return b;
+  }));
+  $("f-entrainement").hidden = false;
+}
+$("ent-fermer").onclick = () => { $("f-entrainement").hidden = true; };
+$("cal-entrainement").onclick = choisirEntrainement;
 const grillesOuvertes = {};                        // le temps de la visite seulement
 async function lancer(jour) {
+  if (jour === 0) { choisirEntrainement(); return; }
   let n = NIVEAUX.find((x) => x.jour === jour);
   if (jour > 0) {
     let g = grillesOuvertes[jour];
@@ -404,14 +440,14 @@ function demarrer(n) {
   chemin = [niv.depart];
   signalerAbandon();
   debut = null; fini = false; penalite = 0; indicesPris = 0; erreurs = 0; retours = 0; debutSignale = false; indiceCase = null; celebration = 0;
-  $("jeu-titre").textContent = niv.jour ? `Jour ${niv.jour} · ${niv.titre}` : "Entraînement";
+  $("jeu-titre").textContent = nomGrille(niv);
   $("jeu-etoiles").innerHTML = "★".repeat(niv.etoiles) + `<span class="off">${"★".repeat(5 - niv.etoiles)}</span>`;
   $("jeu-etoiles").setAttribute("aria-label", `Difficulté ${niv.etoiles} sur 5`);
   $("jeu-regle").textContent = niv.regle;
   $("legende").hidden = !Object.keys(niv.boules).length;
   majIndices();
   musique.demarrer();
-  $("record").textContent = "Record : " + (memoire.records[niv.jour] ? fmt(memoire.records[niv.jour]) : "—");
+  $("record").textContent = "Record : " + (memoire.records[cleRecord(niv)] ? fmt(memoire.records[cleRecord(niv)]) : "—");
   message("Pose ton doigt sur l'éclair et glisse.");
   montrer("jeu");
   redimensionner();
@@ -469,7 +505,7 @@ function essayer(p) {
     erreurs++; son.erreur(); vibrer(30); return;
   }
   if (!debut) { debut = performance.now(); minuteur = setInterval(majChrono, 200); assurerPartie(); }
-  if (!debutSignale) { debutSignale = true; stat("debut", niv.jour, { rejoue: !!memoire.records[niv.jour] }); }
+  if (!debutSignale) { debutSignale = true; stat("debut", niv.jour, { rejoue: !!memoire.records[cleRecord(niv)], niveau: niv.niveau }); }
   chemin.push(p);
   indiceCase = null;
   vibrer(8);
@@ -677,19 +713,19 @@ window.addEventListener("resize", () => { if (!$("ecran-jeu").hidden) redimensio
 async function gagner() {
   fini = performance.now(); celebration = fini; clearInterval(minuteur); majChrono();
   const t = tempsEcoule();
-  const ancien = memoire.records[niv.jour];
+  const ancien = memoire.records[cleRecord(niv)];
   // le temps officiel : le serveur vérifie le fil et mesure lui-même la durée de la partie
   const officiel = niv.jour > 0 ? terminerPartie() : Promise.resolve(null);
   const nouveau = !ancien || t < ancien;
-  if (nouveau) memoire.records[niv.jour] = Math.round(t);
+  if (nouveau) memoire.records[cleRecord(niv)] = Math.round(t);
   if (niv.jour && niv.jour === jourDuJour()) memoire.jourMeme[niv.jour] = true;      // la flamme : fini le jour même
   ecrire(memoire);
   vibrer([20, 40, 20]);
   son.victoire();
-  stat("victoire", niv.jour, { temps: Math.round(t), indices: indicesPris, erreurs, retours, record: nouveau, jour_meme: niv.jour === jourDuJour(), flamme: flamme() });
+  stat("victoire", niv.jour, { niveau: niv.niveau, temps: Math.round(t), indices: indicesPris, erreurs, retours, record: nouveau, jour_meme: niv.jour === jourDuJour(), flamme: flamme() });
   message("Toute la guirlande est allumée !");
   setTimeout(() => {
-    $("vic-jour").textContent = niv.jour ? `Jour ${niv.jour} · ${niv.titre}` : "Entraînement";
+    $("vic-jour").textContent = nomGrille(niv);
     $("vic-temps").textContent = fmt(t);
     $("vic-indices").textContent = indicesPris ? `${indicesPris} indice${indicesPris > 1 ? "s" : ""} utilisé${indicesPris > 1 ? "s" : ""} (+${indicesPris * 5} s)` : "Sans indice !";
     $("vic-indices").classList.toggle("sans", !indicesPris);
@@ -703,9 +739,11 @@ async function gagner() {
       }
       afficherClassement();
     });
-    const suivant = NIVEAUX.find((n) => n.jour > niv.jour && n.jour > 0 && ouvert(n.jour));
+    const suivant = niv.jour === 0 ? ENTRAINEMENTS.find((n) => n.niveau === niv.niveau + 1)
+      : NIVEAUX.find((n) => n.jour > niv.jour && n.jour > 0 && ouvert(n.jour));
     $("vic-suivant").hidden = !suivant;
-    if (suivant) $("vic-suivant").onclick = () => { $("f-victoire").hidden = true; lancer(suivant.jour); };
+    $("vic-suivant").textContent = niv.jour === 0 ? "Plus difficile" : "Jour suivant";
+    if (suivant) $("vic-suivant").onclick = () => { $("f-victoire").hidden = true; suivant.jour ? lancer(suivant.jour) : demarrer(suivant); };
     $("f-victoire").hidden = false;
     $("cal-flamme").textContent = $("jeu-flamme").textContent = flamme();
   }, 1100);
@@ -801,7 +839,7 @@ async function afficherClassement() {
   const liste = $("classement");
   const lutins = LUTINS.map(([nom, parCase]) => ({ nom, t: cases.size * parCase, lutin: true }));
   let lignes, joueurs = 0, horsLigne = false;
-  const moi = { nom: (memoire.nom || "Toi") + " (toi)", t: memoire.records[niv.jour], moi: true };
+  const moi = { nom: (memoire.nom || "Toi") + " (toi)", t: memoire.records[cleRecord(niv)], moi: true };
   if (niv.jour && !APERCU) {
     try {
       const d = await appel("avent_classement", { p_jour: niv.jour, p_appareil: appareil() });
