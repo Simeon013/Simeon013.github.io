@@ -4,11 +4,24 @@
 
 Règle du jeu : un seul fil, de l'éclair à l'étoile, qui passe par toutes les cases ; sur une boule rouge le fil
 tourne, sur une boule dorée il va tout droit ; on ne passe pas sur les cadeaux ni les sapins.
-Chaque grille part d'un chemin tiré au hasard (graine fixe, donc toujours les mêmes grilles), on y place toutes
+Chaque grille part d'un chemin tiré au hasard, on y place toutes
 les boules qu'il implique, puis on en retire tant que la solution reste unique (vérifié par une recherche
 exhaustive) ; quelques boules retirées sont remises pour adoucir la grille (« en_plus »). Grille 0 : l'entraînement.
 Sans dépendance : Python 3 suffit.
+
+Sécurité : les grilles 1 à 24 et leurs solutions sont SECRÈTES. Le tirage utilise une graine aléatoire jamais
+enregistrée, et le fichier complet est écrit hors du dépôt (chemin donné en argument) ; il est ensuite chargé dans
+la table privée public.avent_grilles (voir supabase/avent-securite.sql), d'où le jeu reçoit chaque grille, sans sa
+solution, seulement le jour où elle s'ouvre. Le dépôt ne garde que src/data/avent-niveaux.json : l'entraînement
+complet (grille 0, publique) et, pour les autres jours, le titre et la taille.
+
+    python3 scripts/avent-niveaux.py /chemin/hors/du/depot/avent-grilles-secretes.json
+    python3 scripts/avent-niveaux.py --entrainements [/chemin/des/grilles-secretes.json]   # refait seulement l'entraînement
+
+L'entraînement : 5 grilles publiques (de « Premiers pas » à « Expert »), avec leur solution, tirées d'une graine
+fixe et différentes de toutes les grilles du jeu (vérifié quand on donne le fichier secret).
 """
+import os
 import json
 import random
 import sys
@@ -129,9 +142,43 @@ def carre(n, b=()):
     return [(x, y) for y in range(n) for x in range(n) if (x, y) not in b]
 
 
+# l'entraînement : niveau, titre, règle, taille, départ, boules en plus (0 = sans boules), bloqueurs, difficulté
+ENTRAINEMENTS = [
+    (1, "Premiers pas", "Relie l'éclair à l'étoile en passant par toutes les cases.", 4, (1, 0), 0, 0, 1),
+    (2, "Les boules", "Sur une boule rouge le fil tourne, sur une boule dorée il va tout droit.", 4, (0, 3), 3, 0, 2),
+    (3, "Moyen", "5 × 5 : suis les boules.", 5, (1, 1), 3, 0, 3),
+    (4, "Difficile", "6 × 6, avec des cadeaux : on ne passe pas dessus.", 6, (2, 5), 5, 3, 4),
+    (5, "Expert", "7 × 7, peu d'aide.", 7, (5, 1), 6, 4, 5),
+]
+
+
+def entrainements(secretes=None):
+    """Les grilles d'entraînement (publiques, graine fixe), jamais identiques à une grille du jeu."""
+    def signature(n):
+        return (tuple(map(tuple, sorted(n["cases"]))), tuple(n["depart"]), tuple(n["arrivee"]), tuple(sorted(n["boules"].items())))
+    interdites = {signature(n) for n in (secretes or []) if n["jour"] > 0}
+    sortie = []
+    for niveau_, titre, regle, n, depart, en_plus, nb_bloq, etoiles in ENTRAINEMENTS:
+        for essai in range(60):
+            g = 900000 + 1000 * niveau_ + essai
+            bloq = bloqueurs(n, nb_bloq, g, depart) if nb_bloq else {}
+            try:
+                ch, boules = fabriquer(carre(n, bloq), depart, g, en_plus, sans_boules=(en_plus == 0), minimum={5: 6, 6: 9, 7: 12}.get(n, 0))
+            except RuntimeError:
+                continue
+            e = niveau(0, titre, regle, n, n, carre(n, bloq), ch, boules, bloq, etoiles)
+            if signature(e) not in interdites:
+                e["niveau"] = niveau_
+                sortie.append(e)
+                print(f"entraînement {niveau_} ({titre}) : {n}×{n}, {len(bloq)} bloqueurs, {len(boules)} boules", flush=True)
+                break
+        else:
+            raise RuntimeError(f"entraînement {niveau_} introuvable")
+    return sortie
+
+
 # jour, titre, règle du jour, taille, départ, boules en plus, bloqueurs, difficulté (1 à 5)
 PLAN = [
-    (0, "Entraînement", "Relie l'éclair à l'étoile en passant par toutes les cases.", 4, (0, 0), 0, 0, 1),
     (1, "Premier circuit", "Relie l'éclair à l'étoile en passant par toutes les cases.", 4, (0, 0), 0, 0, 1),
     (2, "Les premières boules", "Nouvelle règle : sur une boule rouge le fil tourne, sur une boule dorée il va tout droit.", 4, (1, 1), 3, 0, 1),
     (3, "La guirlande du salon", "La grille grandit : 5 × 5.", 5, (2, 2), 4, 0, 2),
@@ -159,12 +206,23 @@ PLAN = [
 
 
 def main():
+    if sys.argv[1:2] == ["--entrainements"]:
+        public = Path(__file__).resolve().parent.parent / "src" / "data" / "avent-niveaux.json"
+        jours = [n for n in json.loads(public.read_text()) if n["jour"] > 0]
+        secretes = json.loads(Path(sys.argv[2]).read_text()) if len(sys.argv) > 2 else None
+        public.write_text(json.dumps(entrainements(secretes) + jours, ensure_ascii=False, separators=(",", ":")) + "\n")
+        print(public)
+        return
+    if len(sys.argv) != 2 or Path(sys.argv[1]).resolve().is_relative_to(Path(__file__).resolve().parent.parent):
+        sys.exit("usage : python3 scripts/avent-niveaux.py /chemin/HORS/du/depot/grilles.json")
+    sel = int.from_bytes(os.urandom(8), "big")          # graine secrète, jamais enregistrée (la grille 0 reste fixe)
     niveaux = []
     for jour, titre, regle, n, depart, en_plus, nb_bloq, etoiles in PLAN:
         for essai in range(30):                     # si les cadeaux rendent la grille impossible, on les replace
-            bloq = bloqueurs(n, nb_bloq, 1000 * (essai + 1) + jour, depart) if nb_bloq else {}
+            g = 0 if jour == 0 else sel
+            bloq = bloqueurs(n, nb_bloq, g + 1000 * (essai + 1) + jour, depart) if nb_bloq else {}
             try:
-                ch, boules = fabriquer(carre(n, bloq), depart, 7 + jour * 13 + essai, en_plus, sans_boules=(en_plus == 0), minimum={5: 6, 6: 9, 7: 12}.get(n, 0))
+                ch, boules = fabriquer(carre(n, bloq), depart, g + 7 + jour * 13 + essai, en_plus, sans_boules=(en_plus == 0), minimum={5: 6, 6: 9, 7: 12}.get(n, 0))
                 break
             except RuntimeError:
                 continue
@@ -174,12 +232,16 @@ def main():
     # le 24 : la grille dessine un sapin, la prise au pied
     lignes = [(2, 4), (2, 4), (1, 5), (1, 5), (0, 6), (0, 6), (3, 3)]
     sapin = [(x, y) for y, (a, b) in enumerate(lignes) for x in range(a, b + 1)]
-    ch, boules = fabriquer(sapin, (3, 6), 24, 5)
+    ch, boules = fabriquer(sapin, (3, 6), sel + 24, 5)
     niveaux.append(niveau(24, "Le sapin de Noël", "Le grand soir : la grille dessine un sapin, la prise est au pied.", 7, 7, sapin, ch, boules, {}, 5))
     print(f"jour 24 : sapin, {len(boules)} boules")
+    secret = Path(sys.argv[1])
+    secret.write_text(json.dumps(niveaux, ensure_ascii=False, separators=(",", ":")) + "\n")
+    public = entrainements(niveaux) + [{k: n[k] for k in ("jour", "titre", "w", "h", "etoiles")} for n in niveaux if n["jour"] > 0]
     sortie = Path(__file__).resolve().parent.parent / "src" / "data" / "avent-niveaux.json"
-    sortie.write_text(json.dumps(niveaux, ensure_ascii=False, separators=(",", ":")) + "\n")
-    print(sortie)
+    sortie.write_text(json.dumps(public, ensure_ascii=False, separators=(",", ":")) + "\n")
+    print(secret, "(secret, hors du dépôt)")
+    print(sortie, "(public : entraînement + titres)")
 
 
 def niveau(jour, titre, regle, w, h, cases, ch, boules, bloq, etoiles):
