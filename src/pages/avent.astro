@@ -83,6 +83,20 @@ import '@fontsource/chakra-petch/700.css';
   </section>
 </div>
 
+<!-- DÉPART D'UNE GRILLE DU JOUR -->
+<div class="voile" id="f-depart" hidden>
+  <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="dep-titre">
+    <span class="etiquette" id="dep-detail"></span>
+    <h3 id="dep-titre">Jour 1</h3>
+    <ul class="regles">
+      <li><span class="n">⏱</span><span>Le chrono démarre dès que tu appuies sur <b>Commencer</b>, et il ne s'arrête plus : même si tu recommences ou que tu quittes la grille.</span></li>
+      <li><span class="n">1</span><span>Seul ton <b>premier essai</b> compte au classement. Ensuite, tu peux rejouer pour le plaisir.</span></li>
+    </ul>
+    <p class="message" id="dep-etat" role="status" style="text-align:left"></p>
+    <div class="deux"><button class="btn" id="dep-annuler">Pas maintenant</button><button class="btn btn-principal" id="dep-go" style="font-size:16px">Commencer</button></div>
+  </div>
+</div>
+
 <!-- RÈGLE -->
 <div class="voile" id="f-regle" hidden>
   <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="regle-titre">
@@ -408,34 +422,41 @@ function choisirEntrainement() {
 }
 $("ent-fermer").onclick = () => { $("f-entrainement").hidden = true; };
 $("cal-entrainement").onclick = choisirEntrainement;
-const grillesOuvertes = {};                        // le temps de la visite seulement
-async function lancer(jour) {
+let essaiClasse = false;                          // le premier essai du jour, le seul qui compte
+let departJour = null;
+function lancer(jour) {
   if (jour === 0) { choisirEntrainement(); return; }
-  let n = NIVEAUX.find((x) => x.jour === jour);
-  if (jour > 0) {
-    let g = grillesOuvertes[jour];
-    if (!g) {
-      try { g = await appel("avent_grille", { p_jour: jour, p_appareil: appareil() }); }
-      catch (e) {
-        alert(e.message === "grille fermée" ? "Cette grille n'est pas encore ouverte." : "Impossible d'ouvrir la grille : vérifie ta connexion et réessaie.");
-        return;
-      }
-      if (!g) { alert("Grille introuvable."); return; }
-      grillesOuvertes[jour] = g;
-    }
-    n = Object.assign({}, n, g, { jour });
-  }
-  demarrer(n);
+  departJour = NIVEAUX.find((x) => x.jour === jour);
+  $("dep-titre").textContent = `Jour ${jour} · ${departJour.titre}`;
+  $("dep-detail").textContent = `${departJour.w} × ${departJour.h} · difficulté ${departJour.etoiles}/5`;
+  $("dep-etat").textContent = "";
+  $("f-depart").hidden = false;
+  if (!memoire.regleVue) { ouvrirRegle(); memoire.regleVue = true; ecrire(memoire); }
 }
+$("dep-annuler").onclick = () => { $("f-depart").hidden = true; };
+$("dep-go").onclick = async () => {
+  const meta = departJour, b = $("dep-go");
+  b.disabled = true;
+  let r;
+  try { r = await appel("avent_commencer", { p_jour: meta.jour, p_appareil: appareil() }); }
+  catch (e) {
+    $("dep-etat").textContent = e.message === "grille fermée" ? "Cette grille n'est pas encore ouverte." : "Impossible d'ouvrir la grille : vérifie ta connexion et réessaie.";
+    b.disabled = false; return;
+  }
+  b.disabled = false; $("f-depart").hidden = true;
+  demarrer(Object.assign({}, meta, r.grille, { jour: meta.jour }), r);   // la grille arrive avec le chrono : impossible de l'étudier avant
+};
 
 function assurerPartie() {
   if (niv.jour > 0 && !partie) partie = appel("avent_commencer", { p_jour: niv.jour, p_appareil: appareil() }).catch(() => null);
   return partie;
 }
 
-function demarrer(n) {
+function demarrer(n, serveur) {
   niv = n;
-  partie = null; partieFinie = null;
+  clearInterval(minuteur);
+  partie = serveur ? Promise.resolve(serveur.partie) : null; partieFinie = null;
+  essaiClasse = !!(serveur && serveur.classee);
   cases = new Set(niv.cases.map(cle));
   chemin = [niv.depart];
   signalerAbandon();
@@ -449,6 +470,13 @@ function demarrer(n) {
   musique.demarrer();
   $("record").textContent = "Record : " + (memoire.records[cleRecord(niv)] ? fmt(memoire.records[cleRecord(niv)]) : "—");
   message("Pose ton doigt sur l'éclair et glisse.");
+  if (serveur) {                                   // le chrono officiel tourne déjà côté serveur
+    debut = performance.now() - (serveur.ecoule_ms || 0);
+    indicesPris = serveur.indices || 0; penalite = 5000 * indicesPris;
+    minuteur = setInterval(majChrono, 200);
+    message(!serveur.classee ? "Essai libre : seul ton premier essai compte au classement."
+      : (serveur.ecoule_ms > 3000 ? "Reprise : ton chrono a continué pendant ton absence." : "C'est parti, le chrono tourne !"));
+  }
   montrer("jeu");
   redimensionner();
   requestAnimationFrame(redimensionner);      // une deuxième fois, une fois la mise en page posée
@@ -674,7 +702,15 @@ requestAnimationFrame(boucle);
 
 // ---------- boutons ----------
 $("b-annuler").onclick = () => { if (!fini && chemin.length > 1) { chemin.pop(); son.retour(); apresCoup(); } };
-$("b-recommencer").onclick = () => { clearInterval(minuteur); demarrer(niv); };
+$("b-recommencer").onclick = () => {
+  if (fini) return;
+  if (niv.jour > 0) {                              // grille du jour : on efface le fil, mais le chrono continue
+    chemin = [niv.depart]; indiceCase = null; apresCoup();
+    message("Fil effacé : le chrono continue.");
+    return;
+  }
+  demarrer(niv);
+};
 function majIndices() { $("b-indice").innerHTML = 'Indice<br><small style="opacity:.7">+5&nbsp;s</small>'; }
 let indiceEnCours = false;
 $("b-indice").onclick = async () => {
@@ -765,18 +801,23 @@ async function appel(fonction, corps) {
   if (!r.ok) throw new Error((d && d.message) || "erreur");
   return d;
 }
-let horsDelai = false, organisateur = false;       // grille d'un jour passé : classement fermé le lendemain à 6 h
+function textePseudo(raison) {
+  if (raison === "numéro") return "Pas de numéro : ton pseudo est visible par tous";
+  return "Ce pseudo est déjà utilisé : choisis-en un autre";
+}
+let horsDelai = false, organisateur = false, essaiLibre = false;       // grille d'un jour passé : classement fermé le lendemain à 6 h
 function raisonNonClasse(r) {
   horsDelai = r && r.raison === "hors délai";
+  essaiLibre = r && r.raison === "essai libre";
   organisateur = r && r.raison === "organisateur";
-  if (r && (r.raison === "nom pris" || r.raison === "nom refusé")) {
+  if (r && (r.raison === "nom pris" || r.raison === "nom refusé" || r.raison === "numéro")) {
     memoire.nom = ""; ecrire(memoire);
     $("f-nom").hidden = false; $("nom").value = "";
-    $("nom").placeholder = r.raison === "nom pris" ? "Ce pseudo est déjà pris : choisis-en un autre" : "Ce pseudo n'est pas accepté : choisis-en un autre";
+    $("nom").placeholder = textePseudo(r.raison);
   }
 }
 async function terminerPartie() {
-  horsDelai = organisateur = false;
+  horsDelai = organisateur = essaiLibre = false;
   try {
     const id = await partie;
     if (!id) return null;
@@ -858,6 +899,7 @@ async function afficherClassement() {
     : APERCU ? "Mode aperçu : les temps ne sont pas envoyés au classement."
     : horsDelai ? "Le classement de cette grille est fermé (il se ferme le lendemain à 6 h) : ton temps reste sur ton téléphone."
     : organisateur ? "Organisateur : tes temps ne comptent pas au classement."
+    : essaiLibre ? "Essai libre : seul ton premier essai de la grille compte au classement."
     : (joueurs < 5 ? "Les lutins sont les personnages du jeu : ils te donnent un temps à battre." : `${joueurs} joueurs sur cette grille.`);
 }
 
@@ -883,9 +925,9 @@ $("f-nom").addEventListener("submit", async (e) => {
     memoire.nom = await appel("avent_choisir_nom", { p_appareil: appareil(), p_nom: v });
   } catch (err) {
     bouton.disabled = false;
-    if (err.message === "nom pris" || err.message === "nom refusé") {
+    if (err.message === "nom pris" || err.message === "nom refusé" || err.message === "numéro") {
       $("nom").value = "";
-      $("nom").placeholder = err.message === "nom pris" ? "Ce pseudo est déjà pris : choisis-en un autre" : "Ce pseudo n'est pas accepté : choisis-en un autre";
+      $("nom").placeholder = textePseudo(err.message);
       $("nom").focus();
       return;
     }
@@ -897,7 +939,7 @@ $("f-nom").addEventListener("submit", async (e) => {
   await classerPartie();
   afficherClassement();
 });
-$("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; demarrer(niv); };
+$("vic-rejouer").onclick = () => { $("f-victoire").hidden = true; niv.jour > 0 ? lancer(niv.jour) : demarrer(niv); };
 $("vic-partager").onclick = async () => {
   const texte = `</Avent> · ${niv.jour ? "jour " + niv.jour : "entraînement"} : guirlande allumée en ${$("vic-temps").textContent}` + (indicesPris ? "" : " sans indice") +
     (flamme() ? ` · flamme ${flamme()}` : "") + ". Tu fais mieux ?";
@@ -949,8 +991,13 @@ function audioPret() {
   if (!audio) {
     try {
       audio = new (window.AudioContext || window.webkitAudioContext)();
-      const maitre = audio.createGain(); maitre.gain.value = 0.9;
-      const compresseur = audio.createDynamicsCompressor(); compresseur.connect(audio.destination); maitre.connect(compresseur);
+      // le compresseur sert seulement de garde-fou contre la saturation : réglé par défaut (seuil −24 dB, rapport 12),
+      // il écrasait tout et rendait le son très faible sur téléphone
+      const maitre = audio.createGain(); maitre.gain.value = 1.4;
+      const compresseur = audio.createDynamicsCompressor();
+      compresseur.threshold.value = -6; compresseur.knee.value = 6; compresseur.ratio.value = 8;
+      compresseur.attack.value = 0.003; compresseur.release.value = 0.15;
+      compresseur.connect(audio.destination); maitre.connect(compresseur);
       sortieMusique = audio.createGain(); sortieMusique.connect(maitre);
       sortieEffets = audio.createGain(); sortieEffets.connect(maitre);
       appliquerSon();
@@ -960,8 +1007,8 @@ function audioPret() {
   return true;
 }
 function appliquerSon() {
-  if (sortieMusique) sortieMusique.gain.value = reglageSon === "tout" ? 0.16 : 0;
-  if (sortieEffets) sortieEffets.gain.value = reglageSon === "muet" ? 0 : 0.5;
+  if (sortieMusique) sortieMusique.gain.value = reglageSon === "tout" ? 0.28 : 0;
+  if (sortieEffets) sortieEffets.gain.value = reglageSon === "muet" ? 0 : 0.8;
   const textes = { tout: "Son", effets: "Effets", muet: "Muet" };
   document.querySelectorAll("[data-son-texte]").forEach((e) => e.textContent = textes[reglageSon]);
   document.querySelectorAll("[data-onde]").forEach((e) => e.style.opacity = reglageSon === "muet" ? 0 : (reglageSon === "effets" ? 0.4 : 1));
