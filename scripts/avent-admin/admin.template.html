@@ -141,8 +141,8 @@ td.n, th.n { text-align: right; }
 
 <script>
 // l'entraînement est public ; les 24 vraies grilles et leurs solutions sont lues dans la table privée avent_grilles
-const ENTRAINEMENT = __ENTRAINEMENT__;
-let NIVEAUX = [ENTRAINEMENT];
+const ENTRAINEMENTS = __ENTRAINEMENTS__;
+let NIVEAUX = [...ENTRAINEMENTS];
 const PROJET = "ujithhyzbfuyabogulzs";
 const $ = (id) => document.getElementById(id);
 const el = (tag, attrs = {}, enfants = []) => {
@@ -196,7 +196,7 @@ async function charger() {
   $("etat").textContent = "Chargement…";
   try {
     const vraies = await sql(`select jour, grille, solution from public.avent_grilles order by jour`);
-    if (vraies.length) NIVEAUX = [ENTRAINEMENT, ...vraies.map((r) => Object.assign({}, r.grille, { jour: n(r.jour), solution: r.solution }))];
+    if (vraies.length) NIVEAUX = [...ENTRAINEMENTS, ...vraies.map((r) => Object.assign({}, r.grille, { jour: n(r.jour), solution: r.solution }))];
     const [tot, jours, sources, compo, cohortes, assid, flammes, grilles, joueurs, avis] = await Promise.all([
       sql(`select count(distinct appareil) filter (where type='visite') visiteurs,
              count(distinct appareil) filter (where type='debut') joueurs,
@@ -341,12 +341,12 @@ function afficherGrilles(stats) {
   statsGrilles = stats;
   const voir = $("voir-solutions").checked;
   $("grilles").replaceChildren(...NIVEAUX.map((niv) => {
-    const s = stats.find((x) => n(x.jour) === niv.jour) || {};
+    const s = niv.jour ? (stats.find((x) => n(x.jour) === niv.jour) || {}) : {};
     const debuts = n(s.debuts), taux = debuts ? n(s.victoires) / debuts : null;
     const pill = debuts < 3 ? el("span", { class: "pill", text: "peu de parties" }) : taux >= .6 ? el("span", { class: "pill ok", text: "réussie " + pct(s.victoires, debuts) }) : taux >= .3 ? el("span", { class: "pill or", text: "difficile " + pct(s.victoires, debuts) }) : el("span", { class: "pill alerte", text: "trop dure ? " + pct(s.victoires, debuts) });
     const c = el("canvas", { "aria-label": `Grille du jour ${niv.jour}` });
     const carte = el("div", { class: "grille" }, [
-      el("div", { class: "titre" }, [el("b", { text: niv.jour ? `Jour ${niv.jour}` : "Entraînement" }), el("span", { class: "pill", text: "★".repeat(niv.etoiles) })]),
+      el("div", { class: "titre" }, [el("b", { text: niv.jour ? `Jour ${niv.jour}` : `Entraînement ${niv.niveau}` }), el("span", { class: "pill", text: "★".repeat(niv.etoiles) })]),
       el("span", { class: "note", text: `${niv.titre} · ${niv.w}×${niv.h} · ${Object.keys(niv.boules).length} boules · ${Object.keys(niv.bloques).length} cases interdites` }),
       c, pill,
       el("div", { class: "chiffres" }, [
